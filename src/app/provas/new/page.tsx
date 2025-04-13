@@ -33,7 +33,7 @@ export default function NewTest() {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      router.push("/tests");
+      router.push("/provas");
     }, 2000);
   };
 

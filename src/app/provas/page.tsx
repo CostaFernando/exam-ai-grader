@@ -91,8 +91,8 @@ export default function TestsPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Tests</h1>
-        <Link href="/tests/new">
+        <h1 className="text-3xl font-bold">Provas</h1>
+        <Link href="/provas/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Create New Test
@@ -102,7 +102,7 @@ export default function TestsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Tests</CardTitle>
+          <CardTitle>Todas Provas</CardTitle>
           <CardDescription>
             Manage your created tests and their grading status
           </CardDescription>
@@ -123,7 +123,7 @@ export default function TestsPage() {
                 <Button variant="outline">Filter</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>All Tests</DropdownMenuItem>
+                <DropdownMenuItem>Todas Provas</DropdownMenuItem>
                 <DropdownMenuItem>Active</DropdownMenuItem>
                 <DropdownMenuItem>Completed</DropdownMenuItem>
                 <DropdownMenuItem>Archived</DropdownMenuItem>
@@ -141,7 +141,7 @@ export default function TestsPage() {
                   : "Create your first test to get started"}
               </p>
               {!searchTerm && (
-                <Link href="/tests/new">
+                <Link href="/provas/new">
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Create New Test
@@ -193,13 +193,13 @@ export default function TestsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <Link href={`/tests/${test.id}`}>
+                            <Link href={`/provas/${test.id}`}>
                               <DropdownMenuItem>
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
                             </Link>
-                            <Link href={`/tests/${test.id}/edit`}>
+                            <Link href={`/provas/${test.id}/edit`}>
                               <DropdownMenuItem>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Test

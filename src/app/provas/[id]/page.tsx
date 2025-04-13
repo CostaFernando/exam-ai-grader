@@ -157,7 +157,7 @@ export default function TestDetailsPage({
       </div>
 
       <div className="flex gap-4 mb-6">
-        <Link href={`/tests/${testId}/edit`}>
+        <Link href={`/provas/${testId}/edit`}>
           <Button variant="outline">
             <Edit className="h-4 w-4 mr-2" />
             Edit Test

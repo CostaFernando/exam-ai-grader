@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Home, FileText, BarChart2, Settings } from "lucide-react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Home, FileText, BarChart2, Settings } from "lucide-react";
 
 export default function Navbar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const isActive = (path: string) => {
-    return pathname === path
-  }
+    return pathname === path;
+  };
 
   return (
     <nav className="border-b">
@@ -27,20 +27,29 @@ export default function Navbar() {
               Dashboard
             </Button>
           </Link>
-          <Link href="/tests">
-            <Button variant={isActive("/tests") ? "default" : "ghost"} size="sm">
+          <Link href="/provas">
+            <Button
+              variant={isActive("/provas") ? "default" : "ghost"}
+              size="sm"
+            >
               <FileText className="h-4 w-4 mr-2" />
-              Tests
+              Provas
             </Button>
           </Link>
           <Link href="/results">
-            <Button variant={isActive("/results") ? "default" : "ghost"} size="sm">
+            <Button
+              variant={isActive("/results") ? "default" : "ghost"}
+              size="sm"
+            >
               <BarChart2 className="h-4 w-4 mr-2" />
               Results
             </Button>
           </Link>
           <Link href="/settings">
-            <Button variant={isActive("/settings") ? "default" : "ghost"} size="sm">
+            <Button
+              variant={isActive("/settings") ? "default" : "ghost"}
+              size="sm"
+            >
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
@@ -48,5 +57,5 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }

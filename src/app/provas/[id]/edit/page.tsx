@@ -124,7 +124,7 @@ export default function EditTestPage({ params }: { params: { id: string } }) {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      router.push(`/tests/${testId}`);
+      router.push(`/provas/${testId}`);
     }, 1500);
   };
 

@@ -1,13 +1,22 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, Upload, BarChart2, Settings } from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { FileText, Upload, BarChart2, Settings } from "lucide-react";
 
 export default function Home() {
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-4xl font-bold mb-2">AI Test Grading Assistant</h1>
-      <p className="text-gray-500 mb-8">Automate grading of discursive questions with AI assistance</p>
+      <p className="text-gray-500 mb-8">
+        Automate grading of discursive questions with AI assistance
+      </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
@@ -19,7 +28,7 @@ export default function Home() {
             <FileText size={64} className="text-gray-400" />
           </CardContent>
           <CardFooter>
-            <Link href="/tests/new" className="w-full">
+            <Link href="/provas/new" className="w-full">
               <Button className="w-full">Create New Test</Button>
             </Link>
           </CardFooter>
@@ -77,5 +86,5 @@ export default function Home() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
