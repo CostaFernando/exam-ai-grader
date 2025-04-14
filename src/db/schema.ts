@@ -5,6 +5,7 @@ import {
   integer,
   pgEnum,
   numeric,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -101,3 +102,10 @@ export const examAnswersTableRelations = relations(
     }),
   })
 );
+
+export const usersTable = pgTable("users", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 255 }).notNull(),
+  age: integer().notNull(),
+  email: varchar({ length: 255 }).notNull().unique(),
+});

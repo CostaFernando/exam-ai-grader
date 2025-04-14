@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,13 +80,9 @@ const mockTest = {
   `,
 };
 
-export default function TestDetailsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function TestDetailsPage() {
   const router = useRouter();
-  const testId = params.id;
+  const testId = useParams<{ id: string }>();
 
   // In a real application, you would fetch the test data based on the ID
   const test = mockTest;

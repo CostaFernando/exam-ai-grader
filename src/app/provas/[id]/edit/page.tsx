@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -79,9 +79,9 @@ const mockTest = {
   `,
 };
 
-export default function EditTestPage({ params }: { params: { id: string } }) {
+export default function EditTestPage() {
   const router = useRouter();
-  const testId = params.id;
+  const testId = useParams<{ id: string }>();
 
   // In a real application, you would fetch the test data based on the ID
   const [test, setTest] = useState(mockTest);
