@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,82 +14,250 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Download, Edit, FileText, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Edit,
+  FileText,
+  Upload,
+  Loader2,
+} from "lucide-react";
+import { initializeDatabase } from "@/db";
+import { eq } from "drizzle-orm";
+import { examsTable, examStatusEnum } from "@/db/schema";
+import { format } from "date-fns";
 
-// Mock data for a specific test
-const mockTest = {
-  id: "1",
-  name: "Midterm Exam",
-  createdAt: "2025-03-15",
-  questionCount: 5,
-  studentsGraded: 18,
-  totalStudents: 25,
-  status: "active",
-  description: "Midterm examination covering chapters 1-5 of the textbook.",
-  questions: [
-    {
-      id: 1,
-      text: "Explain the concept of inheritance in object-oriented programming.",
-      maxScore: 10,
-    },
-    {
-      id: 2,
-      text: "Compare and contrast functional and object-oriented programming paradigms.",
-      maxScore: 15,
-    },
-    {
-      id: 3,
-      text: "Describe the principles of REST architecture and provide examples.",
-      maxScore: 20,
-    },
-    {
-      id: 4,
-      text: "Analyze the time complexity of the quicksort algorithm.",
-      maxScore: 25,
-    },
-    {
-      id: 5,
-      text: "Design a database schema for a social media application.",
-      maxScore: 30,
-    },
-  ],
-  rubric: `
-    Question 1 (10 points):
-    - Complete explanation of inheritance (5 points)
-    - Examples of inheritance in practice (3 points)
-    - Discussion of benefits and limitations (2 points)
-
-    Question 2 (15 points):
-    - Clear explanation of both paradigms (5 points)
-    - Detailed comparison of key differences (5 points)
-    - Examples demonstrating the differences (5 points)
-
-    Question 3 (20 points):
-    - Explanation of REST principles (8 points)
-    - Discussion of RESTful API design (6 points)
-    - Practical examples of REST APIs (6 points)
-
-    Question 4 (25 points):
-    - Correct analysis of average case (10 points)
-    - Analysis of worst case scenario (8 points)
-    - Comparison with other sorting algorithms (7 points)
-
-    Question 5 (30 points):
-    - Entity relationship diagram (10 points)
-    - Normalization and optimization (10 points)
-    - Explanation of design decisions (10 points)
-  `,
+// Define types based on schema
+type Exam = {
+  id: number;
+  name: string;
+  description: string | null;
+  status: (typeof examStatusEnum.enumValues)[number];
+  gradingRubric: string | null;
+  answerSheet: string | null;
+  url: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  questions: Question[];
+  examAnswers: ExamAnswer[];
 };
 
-export default function TestDetailsPage() {
+type Question = {
+  id: number;
+  examId: number;
+  text: string;
+  maxScore: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ExamAnswer = {
+  id: number;
+  examId: number;
+  questionId: number;
+  studentId: number;
+  answersUrl: string | null;
+  score: number;
+  feedback: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  student: {
+    id: number;
+    name: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+};
+
+export default function ExamDetailsPage() {
   const router = useRouter();
-  const testId = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const examId = params.id;
 
-  // In a real application, you would fetch the test data based on the ID
-  const test = mockTest;
+  const [exam, setExam] = useState<Exam | null>(null);
+  const [db, setDb] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!test) {
-    return <div>Test not found</div>;
+  // Initialize database connection
+  useEffect(() => {
+    async function initializeDatabaseAndSetDb() {
+      try {
+        const database = await initializeDatabase();
+        setDb(database);
+      } catch (err) {
+        console.error("Failed to initialize database:", err);
+        setError("Failed to connect to database");
+        setLoading(false);
+      }
+    }
+
+    initializeDatabaseAndSetDb();
+  }, []);
+
+  // Fetch exam data when database is ready
+  useEffect(() => {
+    async function fetchExam() {
+      if (!db || !examId) return;
+
+      try {
+        setLoading(true);
+        const result = await db.query.examsTable.findFirst({
+          where: eq(examsTable.id, parseInt(examId)),
+          with: {
+            questions: true,
+            examAnswers: {
+              with: {
+                student: true,
+              },
+            },
+          },
+        });
+
+        if (!result) {
+          setError("Exam not found");
+        } else {
+          setExam(result);
+        }
+      } catch (err) {
+        console.error("Error fetching exam:", err);
+        setError("Failed to load exam data");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (db && examId) {
+      fetchExam();
+    }
+  }, [db, examId]);
+
+  // Helper function to format status display
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS":
+        return "Active";
+      case "COMPLETED":
+        return "Completed";
+      case "ARCHIVED":
+        return "Archived";
+      default:
+        return status;
+    }
+  };
+
+  // Helper function to get badge variant based on status
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS":
+        return "default";
+      case "COMPLETED":
+        return "secondary";
+      case "ARCHIVED":
+        return "outline";
+      default:
+        return "default";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-10 flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-gray-400 mb-4" />
+        <p className="text-gray-500">Loading exam details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="outline" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-500">{error}</p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => router.back()}>Go Back</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!exam) {
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="outline" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Exam Not Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>The requested exam could not be found.</p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => router.push("/provas")}>
+              View All Exams
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  // Calculate statistics
+  const totalQuestions = exam.questions.length;
+  const totalScore = exam.questions.reduce((sum, q) => sum + q.maxScore, 0);
+
+  // Count distinct students who have answers
+  const uniqueStudentIds = new Set(
+    exam.examAnswers.map((answer) => answer.studentId)
+  );
+  const studentsGraded = uniqueStudentIds.size;
+
+  // Format date
+  const createdDate =
+    exam.createdAt instanceof Date
+      ? format(exam.createdAt, "yyyy-MM-dd")
+      : format(new Date(exam.createdAt), "yyyy-MM-dd");
+
+  // Calculate scores if there are student answers
+  let averageScore = 0;
+  let highestScore = 0;
+  let lowestScore = 0;
+
+  if (studentsGraded > 0) {
+    // Group answers by student
+    const studentScores = Array.from(uniqueStudentIds).map((studentId) => {
+      const studentAnswers = exam.examAnswers.filter(
+        (answer) => answer.studentId === studentId
+      );
+      const totalScoreForStudent = studentAnswers.reduce(
+        (sum, answer) => sum + answer.score,
+        0
+      );
+      return (totalScoreForStudent / totalScore) * 100;
+    });
+
+    averageScore =
+      studentScores.reduce((sum, score) => sum + score, 0) /
+      studentScores.length;
+    highestScore = Math.max(...studentScores);
+    lowestScore = Math.min(...studentScores);
   }
 
   return (
@@ -98,17 +267,9 @@ export default function TestDetailsPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <h1 className="text-3xl font-bold">{test.name}</h1>
-        <Badge
-          variant={
-            test.status === "active"
-              ? "default"
-              : test.status === "completed"
-              ? "secondary"
-              : "outline"
-          }
-        >
-          {test.status.charAt(0).toUpperCase() + test.status.slice(1)}
+        <h1 className="text-3xl font-bold">{exam.name}</h1>
+        <Badge variant={getStatusVariant(exam.status)}>
+          {formatStatus(exam.status)}
         </Badge>
       </div>
 
@@ -118,7 +279,7 @@ export default function TestDetailsPage() {
             <CardTitle className="text-sm font-medium">Questions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{test.questionCount}</div>
+            <div className="text-3xl font-bold">{totalQuestions}</div>
             <p className="text-sm text-gray-500">Total questions</p>
           </CardContent>
         </Card>
@@ -131,12 +292,11 @@ export default function TestDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {test.studentsGraded} / {test.totalStudents}
+              {studentsGraded} / {studentsGraded}{" "}
+              {/* Could be updated with enrolled students count if available */}
             </div>
             <p className="text-sm text-gray-500">
-              {test.studentsGraded === test.totalStudents
-                ? "All complete"
-                : "In progress"}
+              {studentsGraded > 0 ? "In progress" : "No submissions"}
             </p>
           </CardContent>
         </Card>
@@ -146,29 +306,33 @@ export default function TestDetailsPage() {
             <CardTitle className="text-sm font-medium">Created</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{test.createdAt}</div>
+            <div className="text-3xl font-bold">{createdDate}</div>
             <p className="text-sm text-gray-500">Date created</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="flex gap-4 mb-6">
-        <Link href={`/provas/${testId}/edit`}>
+        <Link href={`/provas/${examId}/edit`}>
           <Button variant="outline">
             <Edit className="h-4 w-4 mr-2" />
             Edit Test
           </Button>
         </Link>
-        <Link href={`/answers/upload?testId=${testId}`}>
+        <Link href={`/answers/upload?examId=${examId}`}>
           <Button>
             <Upload className="h-4 w-4 mr-2" />
             Upload Student Answers
           </Button>
         </Link>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Download Test PDF
-        </Button>
+        {exam.url && (
+          <Button variant="outline" asChild>
+            <a href={exam.url} target="_blank" rel="noopener noreferrer">
+              <Download className="h-4 w-4 mr-2" />
+              Download Test PDF
+            </a>
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="details">
@@ -189,25 +353,37 @@ export default function TestDetailsPage() {
               <div className="space-y-4">
                 <div>
                   <h3 className="font-medium">Description</h3>
-                  <p className="text-gray-600">{test.description}</p>
-                </div>
-                <div>
-                  <h3 className="font-medium">Total Points</h3>
                   <p className="text-gray-600">
-                    {test.questions.reduce((sum, q) => sum + q.maxScore, 0)}{" "}
-                    points
+                    {exam.description || "No description provided"}
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-medium">Test PDF</h3>
-                  <div className="flex items-center mt-2">
-                    <FileText className="h-6 w-6 text-gray-400 mr-2" />
-                    <span className="text-sm">midterm_exam.pdf</span>
-                    <Button variant="ghost" size="sm" className="ml-2">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <h3 className="font-medium">Total Points</h3>
+                  <p className="text-gray-600">{totalScore} points</p>
                 </div>
+                {exam.url && (
+                  <div>
+                    <h3 className="font-medium">Test PDF</h3>
+                    <div className="flex items-center mt-2">
+                      <FileText className="h-6 w-6 text-gray-400 mr-2" />
+                      <span className="text-sm">View PDF</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-2"
+                        asChild
+                      >
+                        <a
+                          href={exam.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -220,19 +396,27 @@ export default function TestDetailsPage() {
               <CardDescription>Questions included in this test</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {test.questions.map((question) => (
-                  <div key={question.id} className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium">Question {question.id}</h3>
-                      <Badge variant="outline">
-                        {question.maxScore} points
-                      </Badge>
+              {exam.questions.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-gray-500">
+                    No questions have been added to this exam.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {exam.questions.map((question, index) => (
+                    <div key={question.id} className="p-4 border rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium">Question {index + 1}</h3>
+                        <Badge variant="outline">
+                          {question.maxScore} points
+                        </Badge>
+                      </div>
+                      <p className="text-gray-600">{question.text}</p>
                     </div>
-                    <p className="text-gray-600">{question.text}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -246,15 +430,25 @@ export default function TestDetailsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="whitespace-pre-line bg-gray-50 p-4 rounded-lg text-gray-700 font-mono text-sm">
-                {test.rubric}
-              </div>
+              {exam.gradingRubric ? (
+                <div className="whitespace-pre-line bg-gray-50 p-4 rounded-lg text-gray-700 font-mono text-sm">
+                  {exam.gradingRubric}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-gray-500">
+                    No grading rubric has been set for this exam.
+                  </p>
+                </div>
+              )}
             </CardContent>
             <CardFooter>
-              <Button variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Rubric
-              </Button>
+              <Link href={`/provas/${examId}/edit`}>
+                <Button variant="outline">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Rubric
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -266,31 +460,37 @@ export default function TestDetailsPage() {
               <CardDescription>Overview of student performance</CardDescription>
             </CardHeader>
             <CardContent>
-              {test.studentsGraded > 0 ? (
+              {studentsGraded > 0 ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Average Score</p>
-                      <p className="text-2xl font-bold">78%</p>
+                      <p className="text-2xl font-bold">
+                        {averageScore.toFixed(1)}%
+                      </p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Highest Score</p>
-                      <p className="text-2xl font-bold">95%</p>
+                      <p className="text-2xl font-bold">
+                        {highestScore.toFixed(1)}%
+                      </p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Lowest Score</p>
-                      <p className="text-2xl font-bold">62%</p>
+                      <p className="text-2xl font-bold">
+                        {lowestScore.toFixed(1)}%
+                      </p>
                     </div>
                   </div>
 
-                  <Link href={`/results?testId=${testId}`}>
+                  <Link href={`/results?examId=${examId}`}>
                     <Button className="w-full">View Detailed Results</Button>
                   </Link>
                 </div>
               ) : (
                 <div className="text-center py-10">
                   <p className="text-gray-500 mb-4">No results available yet</p>
-                  <Link href={`/answers/upload?testId=${testId}`}>
+                  <Link href={`/answers/upload?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Student Answers

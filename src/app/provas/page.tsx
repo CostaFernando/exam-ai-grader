@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,58 +34,151 @@ import {
   Trash2,
   Edit,
   Eye,
+  Loader2,
 } from "lucide-react";
+import { initializeDatabase } from "@/db";
+import { examStatusEnum, examsTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { format } from "date-fns";
 
-// Mock data for tests
-const mockTests = [
-  {
-    id: "1",
-    name: "Midterm Exam",
-    createdAt: "2025-03-15",
-    questionCount: 5,
-    studentsGraded: 18,
-    totalStudents: 25,
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Final Exam",
-    createdAt: "2025-04-02",
-    questionCount: 8,
-    studentsGraded: 0,
-    totalStudents: 0,
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Quiz 1",
-    createdAt: "2025-02-10",
-    questionCount: 3,
-    studentsGraded: 22,
-    totalStudents: 22,
-    status: "completed",
-  },
-  {
-    id: "4",
-    name: "Pop Quiz",
-    createdAt: "2025-01-25",
-    questionCount: 2,
-    studentsGraded: 20,
-    totalStudents: 20,
-    status: "archived",
-  },
-];
+// Define types based on schema
+type Exam = {
+  id: number;
+  name: string;
+  description: string | null;
+  status: (typeof examStatusEnum.enumValues)[number];
+  gradingRubric: string | null;
+  answerSheet: string | null;
+  url: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  questions: Question[];
+  examAnswers: ExamAnswer[];
+};
 
-export default function TestsPage() {
+type Question = {
+  id: number;
+  examId: number;
+  text: string;
+  maxScore: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type ExamAnswer = {
+  id: number;
+  examId: number;
+  questionId: number;
+  studentId: number;
+  answersUrl: string | null;
+  score: number;
+  feedback: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  student: {
+    id: number;
+    name: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+};
+
+export default function ExamsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [tests, setTests] = useState(mockTests);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [db, setDb] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredTests = tests.filter((test) =>
-    test.name.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    async function initializeDatabaseAndSetDb() {
+      try {
+        const database = await initializeDatabase();
+        setDb(database);
+      } catch (err) {
+        console.error("Failed to initialize database:", err);
+        setError("Failed to connect to database");
+        setLoading(false);
+      }
+    }
+
+    initializeDatabaseAndSetDb();
+  }, []);
+
+  useEffect(() => {
+    async function fetchExams() {
+      if (!db) return;
+
+      try {
+        setLoading(true);
+        const result = await db.query.examsTable.findMany({
+          with: {
+            questions: true,
+            examAnswers: {
+              with: {
+                student: true,
+              },
+            },
+          },
+        });
+        setExams(result);
+      } catch (err) {
+        console.error("Error fetching exams:", err);
+        setError("Failed to load exams");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (db) {
+      fetchExams();
+    }
+  }, [db]);
+
+  const filteredExams = exams.filter((exam) =>
+    exam.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDeleteTest = (id: string) => {
-    setTests(tests.filter((test) => test.id !== id));
+  const handleDeleteExam = async (id: number) => {
+    if (!db) return;
+
+    try {
+      // Delete from database using Drizzle
+      await db.delete(examsTable).where(eq(examsTable.id, id));
+      // Update UI
+      setExams(exams.filter((exam) => exam.id !== id));
+    } catch (err) {
+      console.error("Error deleting exam:", err);
+      // You could add toast notification here for error feedback
+    }
+  };
+
+  // Helper function to format status display
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS":
+        return "Active";
+      case "COMPLETED":
+        return "Completed";
+      case "ARCHIVED":
+        return "Archived";
+      default:
+        return status;
+    }
+  };
+
+  // Helper function to get badge variant based on status
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "IN_PROGRESS":
+        return "default";
+      case "COMPLETED":
+        return "secondary";
+      case "ARCHIVED":
+        return "outline";
+      default:
+        return "default";
+    }
   };
 
   return (
@@ -131,7 +224,16 @@ export default function TestsPage() {
             </DropdownMenu>
           </div>
 
-          {filteredTests.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+              <p className="mt-2 text-gray-500">Loading exams...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-10">
+              <p className="text-red-500">{error}</p>
+            </div>
+          ) : filteredExams.length === 0 ? (
             <div className="text-center py-10">
               <FileText className="h-10 w-10 text-gray-400 mx-auto mb-2" />
               <h3 className="text-lg font-medium">No tests found</h3>
@@ -163,65 +265,73 @@ export default function TestsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTests.map((test) => (
-                    <TableRow key={test.id}>
-                      <TableCell className="font-medium">{test.name}</TableCell>
-                      <TableCell>{test.createdAt}</TableCell>
-                      <TableCell>{test.questionCount}</TableCell>
-                      <TableCell>
-                        {test.studentsGraded} / {test.totalStudents}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            test.status === "active"
-                              ? "default"
-                              : test.status === "completed"
-                              ? "secondary"
-                              : "outline"
-                          }
-                        >
-                          {test.status.charAt(0).toUpperCase() +
-                            test.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <Link href={`/provas/${test.id}`}>
-                              <DropdownMenuItem>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
+                  {filteredExams.map((exam) => {
+                    // Count distinct students who have answers
+                    const uniqueStudentIds = new Set(
+                      exam.examAnswers.map((answer) => answer.studentId)
+                    );
+                    const studentsGraded = uniqueStudentIds.size;
+
+                    // Format date
+                    const createdDate =
+                      exam.createdAt instanceof Date
+                        ? format(exam.createdAt, "yyyy-MM-dd")
+                        : format(new Date(exam.createdAt), "yyyy-MM-dd");
+
+                    return (
+                      <TableRow key={exam.id}>
+                        <TableCell className="font-medium">
+                          {exam.name}
+                        </TableCell>
+                        <TableCell>{createdDate}</TableCell>
+                        <TableCell>{exam.questions.length}</TableCell>
+                        <TableCell>
+                          {studentsGraded} / {studentsGraded}{" "}
+                          {/* For now displaying same value; could be updated with "total students" if needed */}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(exam.status)}>
+                            {formatStatus(exam.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <Link href={`/provas/${exam.id}`}>
+                                <DropdownMenuItem>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                              </Link>
+                              <Link href={`/provas/${exam.id}/edit`}>
+                                <DropdownMenuItem>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit Test
+                                </DropdownMenuItem>
+                              </Link>
+                              <Link href={`/answers/upload?testId=${exam.id}`}>
+                                <DropdownMenuItem>
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Add Student Answers
+                                </DropdownMenuItem>
+                              </Link>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteExam(exam.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+                                <span className="text-red-500">Delete</span>
                               </DropdownMenuItem>
-                            </Link>
-                            <Link href={`/provas/${test.id}/edit`}>
-                              <DropdownMenuItem>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Test
-                              </DropdownMenuItem>
-                            </Link>
-                            <Link href={`/answers/upload?testId=${test.id}`}>
-                              <DropdownMenuItem>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Student Answers
-                              </DropdownMenuItem>
-                            </Link>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteTest(test.id)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2 text-red-500" />
-                              <span className="text-red-500">Delete</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

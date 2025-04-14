@@ -33,7 +33,6 @@ import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { initializeDatabase } from "@/db";
 import { examsTable } from "@/db/schema";
 
-// Define the form schema
 const formSchema = z.object({
   name: z.string().min(1, "Test name is required"),
   url: z.string().min(1, "Test PDF is required"),
@@ -49,7 +48,6 @@ export default function CreateExamPage() {
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,7 +59,6 @@ export default function CreateExamPage() {
     },
   });
 
-  // Initialize database on component mount
   useEffect(() => {
     async function initializeDatabaseAndSetDb() {
       const database = await initializeDatabase();
