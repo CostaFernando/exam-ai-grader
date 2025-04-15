@@ -30,6 +30,7 @@ type Exam = {
   description: string | null;
   gradingRubric: string | null;
   url: string | null;
+  answerKey: string | null;
 };
 
 export default function EditExamPage() {
@@ -112,6 +113,7 @@ export default function EditExamPage() {
           description: exam.description,
           gradingRubric: exam.gradingRubric,
           url: exam.url,
+          answerKey: exam.answerKey,
           updatedAt: new Date(),
         })
         .where(eq(examsTable.id, examId));
@@ -243,6 +245,19 @@ export default function EditExamPage() {
                 value={exam.gradingRubric || ""}
                 onChange={(e) =>
                   setExam({ ...exam, gradingRubric: e.target.value })
+                }
+                rows={10}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="answerKey">Answer Key</Label>
+              <Textarea
+                id="answerKey"
+                value={exam.answerKey || ""}
+                onChange={(e) =>
+                  setExam({ ...exam, answerKey: e.target.value })
                 }
                 rows={10}
                 required

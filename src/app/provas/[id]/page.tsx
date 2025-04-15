@@ -334,6 +334,7 @@ export default function ExamDetailsPage() {
         <TabsList className="mb-4">
           <TabsTrigger value="details">Test Details</TabsTrigger>
           <TabsTrigger value="rubric">Grading Rubric</TabsTrigger>
+          <TabsTrigger value="answerKey">Answer Key</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
 
@@ -404,6 +405,36 @@ export default function ExamDetailsPage() {
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Rubric
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="answerKey">
+          <Card>
+            <CardHeader>
+              <CardTitle>Answer Key</CardTitle>
+              <CardDescription>Correct answers for this test</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {exam.answerKey ? (
+                <div className="whitespace-pre-line bg-gray-50 p-4 rounded-lg text-gray-700 font-mono text-sm">
+                  {exam.answerKey}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-gray-500">
+                    No answer key has been set for this exam.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Link href={`/provas/${examId}/edit`}>
+                <Button variant="outline">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Answer Key
                 </Button>
               </Link>
             </CardFooter>
