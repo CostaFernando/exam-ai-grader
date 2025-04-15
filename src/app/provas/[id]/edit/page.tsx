@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,83 +18,95 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploader } from "@/components/file-uploader";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
+import { initializeDatabase } from "@/db";
+import { eq } from "drizzle-orm";
+import { examsTable, questionsTable } from "@/db/schema";
+import { storeFileInIndexedDB } from "@/lib/indexedDB";
+import { toast } from "sonner";
 
-// Mock data for a specific test
-const mockTest = {
-  id: "1",
-  name: "Midterm Exam",
-  description: "Midterm examination covering chapters 1-5 of the textbook.",
-  questions: [
-    {
-      id: 1,
-      text: "Explain the concept of inheritance in object-oriented programming.",
-      maxScore: 10,
-    },
-    {
-      id: 2,
-      text: "Compare and contrast functional and object-oriented programming paradigms.",
-      maxScore: 15,
-    },
-    {
-      id: 3,
-      text: "Describe the principles of REST architecture and provide examples.",
-      maxScore: 20,
-    },
-    {
-      id: 4,
-      text: "Analyze the time complexity of the quicksort algorithm.",
-      maxScore: 25,
-    },
-    {
-      id: 5,
-      text: "Design a database schema for a social media application.",
-      maxScore: 30,
-    },
-  ],
-  rubric: `
-    Question 1 (10 points):
-    - Complete explanation of inheritance (5 points)
-    - Examples of inheritance in practice (3 points)
-    - Discussion of benefits and limitations (2 points)
-
-    Question 2 (15 points):
-    - Clear explanation of both paradigms (5 points)
-    - Detailed comparison of key differences (5 points)
-    - Examples demonstrating the differences (5 points)
-
-    Question 3 (20 points):
-    - Explanation of REST principles (8 points)
-    - Discussion of RESTful API design (6 points)
-    - Practical examples of REST APIs (6 points)
-
-    Question 4 (25 points):
-    - Correct analysis of average case (10 points)
-    - Analysis of worst case scenario (8 points)
-    - Comparison with other sorting algorithms (7 points)
-
-    Question 5 (30 points):
-    - Entity relationship diagram (10 points)
-    - Normalization and optimization (10 points)
-    - Explanation of design decisions (10 points)
-  `,
+type Exam = {
+  id: number;
+  name: string;
+  description: string | null;
+  gradingRubric: string | null;
+  url: string | null;
+  questions: Question[];
 };
 
-export default function EditTestPage() {
-  const router = useRouter();
-  const testId = useParams<{ id: string }>();
+type Question = {
+  id: number;
+  examId: number;
+  text: string;
+  maxScore: number;
+};
 
-  // In a real application, you would fetch the test data based on the ID
-  const [test, setTest] = useState(mockTest);
-  const [isLoading, setIsLoading] = useState(false);
+export default function EditExamPage() {
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const examId = parseInt(params.id);
+
+  const [exam, setExam] = useState<Exam | null>(null);
+  const [db, setDb] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function initializeDatabaseAndSetDb() {
+      try {
+        const database = await initializeDatabase();
+        setDb(database);
+      } catch (err) {
+        console.error("Failed to initialize database:", err);
+        setError("Failed to connect to database");
+        setIsLoading(false);
+      }
+    }
+
+    initializeDatabaseAndSetDb();
+  }, []);
+
+  useEffect(() => {
+    async function fetchExam() {
+      if (!db || isNaN(examId)) return;
+
+      try {
+        setIsLoading(true);
+        const result = await db.query.examsTable.findFirst({
+          where: eq(examsTable.id, examId),
+          with: {
+            questions: true,
+          },
+        });
+
+        if (!result) {
+          setError("Exam not found");
+        } else {
+          setExam(result);
+        }
+      } catch (err) {
+        console.error("Error fetching exam:", err);
+        setError("Failed to load exam data");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (db && examId) {
+      fetchExam();
+    }
+  }, [db, examId]);
 
   const handleQuestionChange = (
     id: number,
     field: string,
     value: string | number
   ) => {
-    setTest({
-      ...test,
-      questions: test.questions.map((q) =>
+    if (!exam) return;
+
+    setExam({
+      ...exam,
+      questions: exam.questions.map((q) =>
         q.id === id
           ? { ...q, [field]: field === "maxScore" ? Number(value) : value }
           : q
@@ -103,30 +115,135 @@ export default function EditTestPage() {
   };
 
   const handleAddQuestion = () => {
-    const newId = Math.max(...test.questions.map((q) => q.id)) + 1;
-    setTest({
-      ...test,
-      questions: [...test.questions, { id: newId, text: "", maxScore: 10 }],
+    if (!exam) return;
+
+    const newId = Math.max(0, ...exam.questions.map((q) => q.id)) + 1;
+    setExam({
+      ...exam,
+      questions: [
+        ...exam.questions,
+        { id: newId, examId: examId, text: "", maxScore: 10 },
+      ],
     });
   };
 
   const handleRemoveQuestion = (id: number) => {
-    setTest({
-      ...test,
-      questions: test.questions.filter((q) => q.id !== id),
+    if (!exam) return;
+
+    setExam({
+      ...exam,
+      questions: exam.questions.filter((q) => q.id !== id),
     });
+  };
+
+  const handleFileSelect = async (file: File) => {
+    if (!exam) return;
+
+    try {
+      const fileRef = await storeFileInIndexedDB(file);
+      setExam({ ...exam, url: fileRef });
+    } catch (error) {
+      console.error("Error storing file:", error);
+      toast.error("Failed to upload file");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!exam || !db) return;
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push(`/provas/${testId}`);
-    }, 1500);
+    try {
+      setIsSaving(true);
+
+      await db
+        .update(examsTable)
+        .set({
+          name: exam.name,
+          description: exam.description,
+          gradingRubric: exam.gradingRubric,
+          url: exam.url,
+          updatedAt: new Date(),
+        })
+        .where(eq(examsTable.id, examId));
+
+      await db.delete(questionsTable).where(eq(questionsTable.examId, examId));
+
+      for (const question of exam.questions) {
+        await db.insert(questionsTable).values({
+          examId: examId,
+          text: question.text,
+          maxScore: question.maxScore,
+        });
+      }
+
+      toast.success("Test updated successfully!");
+      router.push(`/provas/${examId}`);
+    } catch (err) {
+      console.error("Error updating exam:", err);
+      toast.error("Failed to update test");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-10 flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-12 w-12 animate-spin text-gray-400 mb-4" />
+        <p className="text-gray-500">Loading exam details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="outline" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-500">{error}</p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => router.back()}>Go Back</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!exam) {
+    return (
+      <div className="container mx-auto py-10">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="outline" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Exam Not Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>The requested exam could not be found.</p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => router.push("/provas")}>
+              View All Exams
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-10">
@@ -151,8 +268,8 @@ export default function EditTestPage() {
               <Label htmlFor="test-name">Test Name</Label>
               <Input
                 id="test-name"
-                value={test.name}
-                onChange={(e) => setTest({ ...test, name: e.target.value })}
+                value={exam.name}
+                onChange={(e) => setExam({ ...exam, name: e.target.value })}
                 required
               />
             </div>
@@ -161,9 +278,9 @@ export default function EditTestPage() {
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                value={test.description}
+                value={exam.description || ""}
                 onChange={(e) =>
-                  setTest({ ...test, description: e.target.value })
+                  setExam({ ...exam, description: e.target.value })
                 }
                 rows={3}
               />
@@ -174,7 +291,7 @@ export default function EditTestPage() {
               <FileUploader
                 accept=".pdf"
                 maxSize={10}
-                onFileSelect={(file) => console.log(file)}
+                onFileSelect={handleFileSelect}
               />
               <p className="text-xs text-gray-500">
                 Upload a new PDF to replace the current one (optional)
@@ -196,14 +313,14 @@ export default function EditTestPage() {
               </div>
 
               <div className="space-y-4">
-                {test.questions.map((question) => (
+                {exam.questions.map((question) => (
                   <div
                     key={question.id}
                     className="p-4 border rounded-lg space-y-3"
                   >
                     <div className="flex items-center justify-between">
                       <Label>Question {question.id}</Label>
-                      {test.questions.length > 1 && (
+                      {exam.questions.length > 1 && (
                         <Button
                           type="button"
                           variant="ghost"
@@ -260,8 +377,10 @@ export default function EditTestPage() {
               <Label htmlFor="rubric">Grading Rubric</Label>
               <Textarea
                 id="rubric"
-                value={test.rubric}
-                onChange={(e) => setTest({ ...test, rubric: e.target.value })}
+                value={exam.gradingRubric || ""}
+                onChange={(e) =>
+                  setExam({ ...exam, gradingRubric: e.target.value })
+                }
                 rows={10}
                 required
               />
@@ -275,8 +394,8 @@ export default function EditTestPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving
