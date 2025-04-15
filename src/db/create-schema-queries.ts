@@ -1,5 +1,4 @@
 export const createSchemaQueries = [
-  // Create enum type
   `DO $$
   BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'exam_status') THEN
@@ -7,7 +6,6 @@ export const createSchemaQueries = [
       END IF;
   END$$;`,
 
-  // Create exam_answers table
   `CREATE TABLE IF NOT EXISTS "exam_answers" (
     "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "exam_answers_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
     "examId" integer NOT NULL,
@@ -20,7 +18,6 @@ export const createSchemaQueries = [
     "updatedAt" timestamp DEFAULT now()
   );`,
 
-  // Create exams table
   `CREATE TABLE IF NOT EXISTS "exams" (
     "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "exams_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
     "name" text NOT NULL,
@@ -33,7 +30,6 @@ export const createSchemaQueries = [
     "updatedAt" timestamp DEFAULT now()
   );`,
 
-  // Create questions table
   `CREATE TABLE IF NOT EXISTS "questions" (
     "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "questions_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
     "examId" integer NOT NULL,
@@ -43,7 +39,6 @@ export const createSchemaQueries = [
     "updatedAt" timestamp DEFAULT now()
   );`,
 
-  // Create students table
   `CREATE TABLE IF NOT EXISTS "students" (
     "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "students_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
     "name" text NOT NULL,
@@ -51,7 +46,6 @@ export const createSchemaQueries = [
     "updatedAt" timestamp DEFAULT now()
   );`,
 
-  // Create users table
   `CREATE TABLE IF NOT EXISTS "users" (
     "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
     "name" varchar(255) NOT NULL,
@@ -60,7 +54,6 @@ export const createSchemaQueries = [
     CONSTRAINT "users_email_unique" UNIQUE("email")
   );`,
 
-  // Add constraints
   `DO $$
   BEGIN
       IF NOT EXISTS (

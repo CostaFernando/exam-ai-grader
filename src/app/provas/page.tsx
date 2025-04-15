@@ -41,7 +41,6 @@ import { examStatusEnum, examsTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { format } from "date-fns";
 
-// Define types based on schema
 type Exam = {
   id: number;
   name: string;
@@ -143,17 +142,13 @@ export default function ExamsPage() {
     if (!db) return;
 
     try {
-      // Delete from database using Drizzle
       await db.delete(examsTable).where(eq(examsTable.id, id));
-      // Update UI
       setExams(exams.filter((exam) => exam.id !== id));
     } catch (err) {
       console.error("Error deleting exam:", err);
-      // You could add toast notification here for error feedback
     }
   };
 
-  // Helper function to format status display
   const formatStatus = (status: string) => {
     switch (status) {
       case "IN_PROGRESS":
@@ -167,7 +162,6 @@ export default function ExamsPage() {
     }
   };
 
-  // Helper function to get badge variant based on status
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "IN_PROGRESS":
@@ -266,13 +260,11 @@ export default function ExamsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredExams.map((exam) => {
-                    // Count distinct students who have answers
                     const uniqueStudentIds = new Set(
                       exam.examAnswers.map((answer) => answer.studentId)
                     );
                     const studentsGraded = uniqueStudentIds.size;
 
-                    // Format date
                     const createdDate =
                       exam.createdAt instanceof Date
                         ? format(exam.createdAt, "yyyy-MM-dd")

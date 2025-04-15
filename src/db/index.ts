@@ -17,7 +17,6 @@ export async function initializeDatabase() {
   let isLocalDBSchemaSynced = false;
   if (!isLocalDBSchemaSynced) {
     try {
-      // Execute each query sequentially
       for (const query of createSchemaQueries) {
         await db.execute(query);
       }
