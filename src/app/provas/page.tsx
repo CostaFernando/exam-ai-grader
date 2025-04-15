@@ -51,23 +51,12 @@ type Exam = {
   url: string | null;
   createdAt: Date;
   updatedAt: Date;
-  questions: Question[];
   examAnswers: ExamAnswer[];
-};
-
-type Question = {
-  id: number;
-  examId: number;
-  text: string;
-  maxScore: number;
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 type ExamAnswer = {
   id: number;
   examId: number;
-  questionId: number;
   studentId: number;
   answersUrl: string | null;
   score: number;
@@ -112,7 +101,6 @@ export default function ExamsPage() {
         setLoading(true);
         const result = await db.query.examsTable.findMany({
           with: {
-            questions: true,
             examAnswers: {
               with: {
                 student: true,
@@ -252,7 +240,6 @@ export default function ExamsPage() {
                   <TableRow>
                     <TableHead>Test Name</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Questions</TableHead>
                     <TableHead>Students Graded</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -276,10 +263,8 @@ export default function ExamsPage() {
                           {exam.name}
                         </TableCell>
                         <TableCell>{createdDate}</TableCell>
-                        <TableCell>{exam.questions.length}</TableCell>
                         <TableCell>
-                          {studentsGraded} / {studentsGraded}{" "}
-                          {/* For now displaying same value; could be updated with "total students" if needed */}
+                          {studentsGraded} / {studentsGraded}
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStatusVariant(exam.status)}>

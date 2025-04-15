@@ -39,23 +39,12 @@ type Exam = {
   url: string | null;
   createdAt: Date;
   updatedAt: Date;
-  questions: Question[];
   examAnswers: ExamAnswer[];
-};
-
-type Question = {
-  id: number;
-  examId: number;
-  text: string;
-  maxScore: number;
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 type ExamAnswer = {
   id: number;
   examId: number;
-  questionId: number;
   studentId: number;
   answersUrl: string | null;
   score: number;
@@ -105,7 +94,6 @@ export default function ExamDetailsPage() {
         const result = await db.query.examsTable.findFirst({
           where: eq(examsTable.id, parseInt(examId)),
           with: {
-            questions: true,
             examAnswers: {
               with: {
                 student: true,
@@ -239,9 +227,6 @@ export default function ExamDetailsPage() {
     );
   }
 
-  const totalQuestions = exam.questions.length;
-  const totalScore = exam.questions.reduce((sum, q) => sum + q.maxScore, 0);
-
   const uniqueStudentIds = new Set(
     exam.examAnswers.map((answer) => answer.studentId)
   );
@@ -265,7 +250,7 @@ export default function ExamDetailsPage() {
         (sum, answer) => sum + answer.score,
         0
       );
-      return (totalScoreForStudent / totalScore) * 100;
+      return totalScoreForStudent;
     });
 
     averageScore =
@@ -288,17 +273,7 @@ export default function ExamDetailsPage() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Questions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalQuestions}</div>
-            <p className="text-sm text-gray-500">Total questions</p>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
@@ -307,8 +282,7 @@ export default function ExamDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {studentsGraded} / {studentsGraded}{" "}
-              {/* Could be updated with enrolled students count if available */}
+              {studentsGraded} / {studentsGraded}
             </div>
             <p className="text-sm text-gray-500">
               {studentsGraded > 0 ? "In progress" : "No submissions"}
@@ -359,7 +333,6 @@ export default function ExamDetailsPage() {
       <Tabs defaultValue="details">
         <TabsList className="mb-4">
           <TabsTrigger value="details">Test Details</TabsTrigger>
-          <TabsTrigger value="questions">Questions</TabsTrigger>
           <TabsTrigger value="rubric">Grading Rubric</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
@@ -377,10 +350,6 @@ export default function ExamDetailsPage() {
                   <p className="text-gray-600">
                     {exam.description || "No description provided"}
                   </p>
-                </div>
-                <div>
-                  <h3 className="font-medium">Total Points</h3>
-                  <p className="text-gray-600">{totalScore} points</p>
                 </div>
                 {exam?.url && (
                   <div>
@@ -405,38 +374,6 @@ export default function ExamDetailsPage() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="questions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Test Questions</CardTitle>
-              <CardDescription>Questions included in this test</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {exam.questions.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-gray-500">
-                    No questions have been added to this exam.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {exam.questions.map((question, index) => (
-                    <div key={question.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">Question {index + 1}</h3>
-                        <Badge variant="outline">
-                          {question.maxScore} points
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600">{question.text}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -486,19 +423,19 @@ export default function ExamDetailsPage() {
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Average Score</p>
                       <p className="text-2xl font-bold">
-                        {averageScore.toFixed(1)}%
+                        {averageScore.toFixed(1)}
                       </p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Highest Score</p>
                       <p className="text-2xl font-bold">
-                        {highestScore.toFixed(1)}%
+                        {highestScore.toFixed(1)}
                       </p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500">Lowest Score</p>
                       <p className="text-2xl font-bold">
-                        {lowestScore.toFixed(1)}%
+                        {lowestScore.toFixed(1)}
                       </p>
                     </div>
                   </div>

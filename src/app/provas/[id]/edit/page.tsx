@@ -17,10 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploader } from "@/components/file-uploader";
-import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { initializeDatabase } from "@/db";
 import { eq } from "drizzle-orm";
-import { examsTable, questionsTable } from "@/db/schema";
+import { examsTable } from "@/db/schema";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { toast } from "sonner";
 
@@ -30,14 +30,6 @@ type Exam = {
   description: string | null;
   gradingRubric: string | null;
   url: string | null;
-  questions: Question[];
-};
-
-type Question = {
-  id: number;
-  examId: number;
-  text: string;
-  maxScore: number;
 };
 
 export default function EditExamPage() {
@@ -74,9 +66,6 @@ export default function EditExamPage() {
         setIsLoading(true);
         const result = await db.query.examsTable.findFirst({
           where: eq(examsTable.id, examId),
-          with: {
-            questions: true,
-          },
         });
 
         if (!result) {
@@ -96,45 +85,6 @@ export default function EditExamPage() {
       fetchExam();
     }
   }, [db, examId]);
-
-  const handleQuestionChange = (
-    id: number,
-    field: string,
-    value: string | number
-  ) => {
-    if (!exam) return;
-
-    setExam({
-      ...exam,
-      questions: exam.questions.map((q) =>
-        q.id === id
-          ? { ...q, [field]: field === "maxScore" ? Number(value) : value }
-          : q
-      ),
-    });
-  };
-
-  const handleAddQuestion = () => {
-    if (!exam) return;
-
-    const newId = Math.max(0, ...exam.questions.map((q) => q.id)) + 1;
-    setExam({
-      ...exam,
-      questions: [
-        ...exam.questions,
-        { id: newId, examId: examId, text: "", maxScore: 10 },
-      ],
-    });
-  };
-
-  const handleRemoveQuestion = (id: number) => {
-    if (!exam) return;
-
-    setExam({
-      ...exam,
-      questions: exam.questions.filter((q) => q.id !== id),
-    });
-  };
 
   const handleFileSelect = async (file: File) => {
     if (!exam) return;
@@ -165,16 +115,6 @@ export default function EditExamPage() {
           updatedAt: new Date(),
         })
         .where(eq(examsTable.id, examId));
-
-      await db.delete(questionsTable).where(eq(questionsTable.examId, examId));
-
-      for (const question of exam.questions) {
-        await db.insert(questionsTable).values({
-          examId: examId,
-          text: question.text,
-          maxScore: question.maxScore,
-        });
-      }
 
       toast.success("Test updated successfully!");
       router.push(`/provas/${examId}`);
@@ -259,9 +199,7 @@ export default function EditExamPage() {
         <form onSubmit={handleSubmit}>
           <CardHeader>
             <CardTitle>Test Details</CardTitle>
-            <CardDescription>
-              Update your test information and questions
-            </CardDescription>
+            <CardDescription>Update your test information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -296,81 +234,6 @@ export default function EditExamPage() {
               <p className="text-xs text-gray-500">
                 Upload a new PDF to replace the current one (optional)
               </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Questions</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddQuestion}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Question
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {exam.questions.map((question) => (
-                  <div
-                    key={question.id}
-                    className="p-4 border rounded-lg space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <Label>Question {question.id}</Label>
-                      {exam.questions.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveQuestion(question.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`question-${question.id}-text`}>
-                        Question Text
-                      </Label>
-                      <Textarea
-                        id={`question-${question.id}-text`}
-                        value={question.text}
-                        onChange={(e) =>
-                          handleQuestionChange(
-                            question.id,
-                            "text",
-                            e.target.value
-                          )
-                        }
-                        rows={2}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`question-${question.id}-score`}>
-                        Maximum Score
-                      </Label>
-                      <Input
-                        id={`question-${question.id}-score`}
-                        type="number"
-                        min="1"
-                        value={question.maxScore}
-                        onChange={(e) =>
-                          handleQuestionChange(
-                            question.id,
-                            "maxScore",
-                            e.target.value
-                          )
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
 
             <div className="space-y-2">
