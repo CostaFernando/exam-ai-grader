@@ -38,7 +38,7 @@ const formSchema = z.object({
   url: z.string().min(1, "Test PDF is required"),
   description: z.string().min(1, "Description is required"),
   gradingRubric: z.string().min(1, "Grading rubric is required"),
-  answerSheet: z.string().min(1, "Answer key is required"),
+  answerKey: z.string().min(1, "Answer key is required"),
 });
 
 export default function CreateExamPage() {
@@ -55,7 +55,7 @@ export default function CreateExamPage() {
       url: "",
       description: "",
       gradingRubric: "",
-      answerSheet: "",
+      answerKey: "",
     },
   });
 
@@ -89,7 +89,7 @@ export default function CreateExamPage() {
         name: data.name,
         description: data.description,
         gradingRubric: data.gradingRubric,
-        answerSheet: data.answerSheet,
+        answerKey: data.answerKey,
         url: data.url,
         status: "IN_PROGRESS",
       })
@@ -230,7 +230,7 @@ export default function CreateExamPage() {
 
                   <FormField
                     control={form.control}
-                    name="answerSheet"
+                    name="answerKey"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Answer Key</FormLabel>

@@ -20,7 +20,7 @@ export const examsTable = pgTable("exams", {
   description: text(),
   status: examStatusEnum().default("IN_PROGRESS"),
   gradingRubric: text(),
-  answerSheet: text(),
+  answerKey: text(),
   url: text(),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp().defaultNow(),

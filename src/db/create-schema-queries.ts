@@ -24,7 +24,7 @@ export const createSchemaQueries = [
     "description" text,
     "status" "exam_status" DEFAULT 'IN_PROGRESS',
     "gradingRubric" text,
-    "answerSheet" text,
+    "answerKey" text,
     "url" text,
     "createdAt" timestamp DEFAULT now(),
     "updatedAt" timestamp DEFAULT now()

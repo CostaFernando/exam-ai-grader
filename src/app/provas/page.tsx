@@ -47,7 +47,7 @@ type Exam = {
   description: string | null;
   status: (typeof examStatusEnum.enumValues)[number];
   gradingRubric: string | null;
-  answerSheet: string | null;
+  answerKey: string | null;
   url: string | null;
   createdAt: Date;
   updatedAt: Date;
