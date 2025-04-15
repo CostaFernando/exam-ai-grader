@@ -70,8 +70,8 @@ export default function CreateExamPage() {
 
   const handleFileSelect = async (file: File) => {
     try {
-      const url = await storeFileInIndexedDB(file);
-      form.setValue("url", url);
+      const fileRef = await storeFileInIndexedDB(file);
+      form.setValue("url", fileRef);
     } catch (error) {
       console.error("Error storing file:", error);
       toast.error("Failed to upload file");

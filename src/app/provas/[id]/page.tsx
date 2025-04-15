@@ -26,8 +26,9 @@ import { initializeDatabase } from "@/db";
 import { eq } from "drizzle-orm";
 import { examsTable, examStatusEnum } from "@/db/schema";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { openFileFromReference, cleanupBlobUrls } from "@/lib/indexedDB";
 
-// Define types based on schema
 type Exam = {
   id: number;
   name: string;
@@ -78,8 +79,8 @@ export default function ExamDetailsPage() {
   const [db, setDb] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [downloadLoading, setDownloadLoading] = useState(false);
 
-  // Initialize database connection
   useEffect(() => {
     async function initializeDatabaseAndSetDb() {
       try {
@@ -95,7 +96,6 @@ export default function ExamDetailsPage() {
     initializeDatabaseAndSetDb();
   }, []);
 
-  // Fetch exam data when database is ready
   useEffect(() => {
     async function fetchExam() {
       if (!db || !examId) return;
@@ -132,7 +132,28 @@ export default function ExamDetailsPage() {
     }
   }, [db, examId]);
 
-  // Helper function to format status display
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (!exam?.url) return;
+
+    try {
+      setDownloadLoading(true);
+      await openFileFromReference(exam.url);
+    } catch (error) {
+      console.error("Error opening file:", error);
+      toast.error("Failed to open file");
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      cleanupBlobUrls();
+    };
+  }, []);
+
   const formatStatus = (status: string) => {
     switch (status) {
       case "IN_PROGRESS":
@@ -146,7 +167,6 @@ export default function ExamDetailsPage() {
     }
   };
 
-  // Helper function to get badge variant based on status
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "IN_PROGRESS":
@@ -219,29 +239,24 @@ export default function ExamDetailsPage() {
     );
   }
 
-  // Calculate statistics
   const totalQuestions = exam.questions.length;
   const totalScore = exam.questions.reduce((sum, q) => sum + q.maxScore, 0);
 
-  // Count distinct students who have answers
   const uniqueStudentIds = new Set(
     exam.examAnswers.map((answer) => answer.studentId)
   );
   const studentsGraded = uniqueStudentIds.size;
 
-  // Format date
   const createdDate =
     exam.createdAt instanceof Date
       ? format(exam.createdAt, "yyyy-MM-dd")
       : format(new Date(exam.createdAt), "yyyy-MM-dd");
 
-  // Calculate scores if there are student answers
   let averageScore = 0;
   let highestScore = 0;
   let lowestScore = 0;
 
   if (studentsGraded > 0) {
-    // Group answers by student
     const studentScores = Array.from(uniqueStudentIds).map((studentId) => {
       const studentAnswers = exam.examAnswers.filter(
         (answer) => answer.studentId === studentId
@@ -325,12 +340,18 @@ export default function ExamDetailsPage() {
             Upload Student Answers
           </Button>
         </Link>
-        {exam.url && (
-          <Button variant="outline" asChild>
-            <a href={exam.url} target="_blank" rel="noopener noreferrer">
+        {exam?.url && (
+          <Button
+            variant="outline"
+            disabled={downloadLoading}
+            onClick={handleDownload}
+          >
+            {downloadLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
               <Download className="h-4 w-4 mr-2" />
-              Download Test PDF
-            </a>
+            )}
+            Download Test PDF
           </Button>
         )}
       </div>
@@ -361,7 +382,7 @@ export default function ExamDetailsPage() {
                   <h3 className="font-medium">Total Points</h3>
                   <p className="text-gray-600">{totalScore} points</p>
                 </div>
-                {exam.url && (
+                {exam?.url && (
                   <div>
                     <h3 className="font-medium">Test PDF</h3>
                     <div className="flex items-center mt-2">
@@ -371,15 +392,14 @@ export default function ExamDetailsPage() {
                         variant="ghost"
                         size="sm"
                         className="ml-2"
-                        asChild
+                        disabled={downloadLoading}
+                        onClick={handleDownload}
                       >
-                        <a
-                          href={exam.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        {downloadLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
                           <Download className="h-4 w-4" />
-                        </a>
+                        )}
                       </Button>
                     </div>
                   </div>
