@@ -24,6 +24,10 @@ Tenha alguns pontos em mente:
 
   const { text } = await generateText({
     model: google("gemini-2.0-flash"),
+    headers: {
+      "Helicone-Property-Feature": "generate-assessment-rubric",
+      "Helicone-Property-Source": "assessment-ai-grader",
+    },
     system,
     temperature: 0.7,
     maxTokens: 2000,
