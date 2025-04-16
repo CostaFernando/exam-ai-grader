@@ -72,13 +72,13 @@ export default function UploadAnswers() {
 
   const handleAddAnswerSheet = () => {
     setAnswerSheets([
-      ...answerSheets,
       {
         id: Date.now().toString(),
         name: "",
         file: null,
         fileUrl: null,
       },
+      ...answerSheets,
     ]);
   };
 
@@ -122,6 +122,7 @@ export default function UploadAnswers() {
 
       if (files.length > 1) {
         let nextEmptySheetIndex = -1;
+        const newSheets: AnswerSheet[] = [];
 
         for (let i = currentIndex + 1; i < updatedSheets.length; i++) {
           if (!updatedSheets[i].file) {
@@ -156,13 +157,18 @@ export default function UploadAnswers() {
               }
             }
           } else {
-            updatedSheets.push({
+            newSheets.push({
               id: Date.now().toString() + i,
               name: file.name.replace(/\.[^/.]+$/, ""),
               file,
               fileUrl,
             });
           }
+        }
+
+        if (newSheets.length > 0) {
+          setAnswerSheets([...newSheets, ...updatedSheets]);
+          return;
         }
       }
 

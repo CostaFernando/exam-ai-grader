@@ -169,7 +169,6 @@ export default function ExamDetailsPage() {
         .delete(examAnswersTable)
         .where(eq(examAnswersTable.id, answerId));
 
-      // Update the local state
       setExam({
         ...exam!,
         examAnswers: exam!.examAnswers.filter((a) => a.id !== answerId),
