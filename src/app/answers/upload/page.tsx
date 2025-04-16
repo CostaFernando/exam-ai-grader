@@ -25,7 +25,7 @@ import { FileUploader } from "@/components/file-uploader";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { initializeDatabase } from "@/db";
-import { examsTable, examAnswersTable } from "@/db/schema";
+import { examAnswersTable } from "@/db/schema";
 import { toast } from "sonner";
 
 interface AnswerSheet {
@@ -190,7 +190,7 @@ export default function UploadAnswers() {
   const saveAnswerSheetsToDb = async () => {
     if (!db) throw new Error("Database not initialized");
 
-    const examId = parseInt(selectedExam);
+    const examId = Number.parseInt(selectedExam);
 
     const savedSheets = await Promise.all(
       answerSheets.map(async (sheet) => {
@@ -219,7 +219,7 @@ export default function UploadAnswers() {
     try {
       await saveAnswerSheetsToDb();
       toast.success("Answer sheets uploaded successfully!");
-      router.push("/results");
+      router.push(`/provas/${selectedExam}`);
     } catch (error) {
       console.error("Error saving answer sheets:", error);
       const message =
@@ -343,7 +343,7 @@ export default function UploadAnswers() {
                   Processing
                 </>
               ) : (
-                "Start Grading"
+                "Upload Answer Sheets"
               )}
             </Button>
           </CardFooter>

@@ -37,9 +37,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { initializeDatabase } from "@/db";
-import { examStatusEnum, examsTable } from "@/db/schema";
+import { type examStatusEnum, examsTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 type Exam = {
   id: number;
@@ -71,6 +72,13 @@ export default function ExamsPage() {
   const [db, setDb] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const router = useRouter();
+
+  // Update the gradeExam function to include the grade parameter
+  const gradeExam = (id: number) => {
+    router.push(`/provas/${id}?tab=answerSheets&grade=true`);
+  };
 
   useEffect(() => {
     async function initializeDatabaseAndSetDb() {
@@ -278,6 +286,12 @@ export default function ExamsPage() {
                                   Edit Test
                                 </DropdownMenuItem>
                               </Link>
+                              <DropdownMenuItem
+                                onClick={() => gradeExam(exam.id)}
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Grade Answers
+                              </DropdownMenuItem>
                               <Link href={`/answers/upload?testId=${exam.id}`}>
                                 <DropdownMenuItem>
                                   <Plus className="h-4 w-4 mr-2" />

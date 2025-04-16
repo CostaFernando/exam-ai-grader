@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import type React from "react";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { initializeDatabase } from "@/db";
 import { eq } from "drizzle-orm";
-import { examsTable, examAnswersTable, examStatusEnum } from "@/db/schema";
+import { examsTable, examAnswersTable, type examStatusEnum } from "@/db/schema";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { openFileFromReference, cleanupBlobUrls } from "@/lib/indexedDB";
@@ -73,6 +75,10 @@ type ExamAnswer = {
 export default function ExamDetailsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const shouldGrade = searchParams.get("grade") === "true";
+  const activeTab = tabParam || "details";
   const examId = params.id;
 
   const [exam, setExam] = useState<Exam | null>(null);
@@ -80,6 +86,18 @@ export default function ExamDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [downloadLoading, setDownloadLoading] = useState(false);
+
+  // Function to handle tab changes
+  const handleTabChange = (value: string) => {
+    // Create a new URLSearchParams object from the current search params
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+
+    // Update the tab parameter
+    newSearchParams.set("tab", value);
+
+    // Navigate to the new URL with updated search params
+    router.push(`/provas/${examId}?${newSearchParams.toString()}`);
+  };
 
   useEffect(() => {
     async function initializeDatabaseAndSetDb() {
@@ -103,7 +121,7 @@ export default function ExamDetailsPage() {
       try {
         setLoading(true);
         const result = await db.query.examsTable.findFirst({
-          where: eq(examsTable.id, parseInt(examId)),
+          where: eq(examsTable.id, Number.parseInt(examId)),
           with: {
             examAnswers: true,
           },
@@ -212,6 +230,47 @@ export default function ExamDetailsPage() {
         return "default";
     }
   };
+
+  const gradeAnswers = useCallback(async () => {
+    if (!exam || exam.examAnswers.length === 0) return;
+
+    try {
+      toast.loading("Grading answer sheets...", { id: "grading" });
+
+      // Call the API to grade all answers for this exam
+      const response = await fetch("/api/grade", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          examId: examId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to grade answers");
+      }
+
+      const result = await response.json();
+
+      toast.success(
+        `Successfully graded ${result.completedCount} answer sheets!`,
+        { id: "grading" }
+      );
+      router.push(`/results?examId=${examId}`);
+    } catch (error) {
+      console.error("Error grading answers:", error);
+      toast.error("Failed to grade answer sheets", { id: "grading" });
+    }
+  }, [exam, examId, router]);
+
+  useEffect(() => {
+    // If the tab is set to answerSheets and there's a 'grade=true' parameter, trigger grading
+    if (tabParam === "answerSheets" && shouldGrade) {
+      gradeAnswers();
+    }
+  }, [tabParam, shouldGrade, gradeAnswers]);
 
   if (loading) {
     return (
@@ -339,12 +398,25 @@ export default function ExamDetailsPage() {
             Edit Test
           </Button>
         </Link>
-        <Link href={`/answers/upload?examId=${examId}`}>
-          <Button>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Answer Sheets
+
+        {answersCount > 0 ? (
+          <Button
+            onClick={() => {
+              router.push(`/provas/${examId}?tab=answerSheets`);
+            }}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Grade Answers
           </Button>
-        </Link>
+        ) : (
+          <Link href={`/answers/upload?examId=${examId}`}>
+            <Button>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Answer Sheets
+            </Button>
+          </Link>
+        )}
+
         {exam?.url && (
           <Button
             variant="outline"
@@ -361,7 +433,7 @@ export default function ExamDetailsPage() {
         )}
       </div>
 
-      <Tabs defaultValue="details">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="mb-4">
           <TabsTrigger value="details">Test Details</TabsTrigger>
           <TabsTrigger value="rubric">Grading Rubric</TabsTrigger>
@@ -482,12 +554,29 @@ export default function ExamDetailsPage() {
                   Manage individual answer sheets for this exam
                 </CardDescription>
               </div>
-              <Link href={`/answers/upload?examId=${examId}`}>
-                <Button>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Add Answer Sheets
-                </Button>
-              </Link>
+              <div className="flex gap-2">
+                {answersCount > 0 ? (
+                  <>
+                    <Link href={`/answers/upload?examId=${examId}`}>
+                      <Button variant="outline">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Add More Sheets
+                      </Button>
+                    </Link>
+                    <Button onClick={gradeAnswers}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Grade Answers
+                    </Button>
+                  </>
+                ) : (
+                  <Link href={`/answers/upload?examId=${examId}`}>
+                    <Button>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Answer Sheets
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {answersCount > 0 ? (
