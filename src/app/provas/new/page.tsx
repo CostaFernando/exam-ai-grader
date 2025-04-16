@@ -24,14 +24,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploader } from "@/components/file-uploader";
-import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { initializeDatabase } from "@/db";
 import { examsTable } from "@/db/schema";
+import {
+  generateAssessmentRubric,
+  generateAnswerKey,
+} from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
 
 const formSchema = z.object({
   name: z.string().min(1, "Test name is required"),
@@ -43,9 +45,10 @@ const formSchema = z.object({
 
 export default function CreateExamPage() {
   const router = useRouter();
-  const [useAI, setUseAI] = useState(false);
   const [db, setDb] = useState<any>(null);
   const [isPending, setIsPending] = useState(false);
+  const [isGeneratingRubric, setIsGeneratingRubric] = useState(false);
+  const [isGeneratingAnswerKey, setIsGeneratingAnswerKey] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -84,6 +87,44 @@ export default function CreateExamPage() {
     } catch (error) {
       console.error("Error storing file:", error);
       toast.error("Failed to upload file");
+    }
+  };
+
+  const handleGenerateRubric = async () => {
+    if (!selectedFile) {
+      toast.error("Please upload a test PDF first");
+      return;
+    }
+
+    setIsGeneratingRubric(true);
+    try {
+      const rubric = await generateAssessmentRubric(selectedFile);
+      form.setValue("gradingRubric", rubric);
+      toast.success("Grading rubric generated successfully!");
+    } catch (error) {
+      console.error("Error generating rubric:", error);
+      toast.error("Failed to generate grading rubric");
+    } finally {
+      setIsGeneratingRubric(false);
+    }
+  };
+
+  const handleGenerateAnswerKey = async () => {
+    if (!selectedFile) {
+      toast.error("Please upload a test PDF first");
+      return;
+    }
+
+    setIsGeneratingAnswerKey(true);
+    try {
+      const answerKeyText = await generateAnswerKey(selectedFile);
+      form.setValue("answerKey", answerKeyText);
+      toast.success("Answer key generated successfully!");
+    } catch (error) {
+      console.error("Error generating answer key:", error);
+      toast.error("Failed to generate answer key");
+    } finally {
+      setIsGeneratingAnswerKey(false);
     }
   };
 
@@ -181,91 +222,103 @@ export default function CreateExamPage() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="use-ai"
-                  checked={useAI}
-                  onCheckedChange={setUseAI}
-                />
-                <FormLabel htmlFor="use-ai">
-                  Use AI to generate rubrics and answer keys
-                </FormLabel>
-              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter a brief description of the test"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <Tabs defaultValue="manual" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="manual">Manual Configuration</TabsTrigger>
-                  <TabsTrigger value="ai" disabled={!useAI}>
-                    AI Generated
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="manual" className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter a brief description of the test"
-                            rows={3}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="gradingRubric"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Grading Rubric</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter your grading criteria here. For example:
+              <FormField
+                control={form.control}
+                name="gradingRubric"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Grading Rubric</FormLabel>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleGenerateRubric}
+                        disabled={isGeneratingRubric || !selectedFile}
+                      >
+                        {isGeneratingRubric ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Generate with AI
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter your grading criteria here. For example:
 - Question 1 (10 points): Complete explanation of concept X
 - Question 2 (15 points): Correct application of formula Y"
-                            rows={6}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        rows={6}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                  <FormField
-                    control={form.control}
-                    name="answerKey"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Answer Key</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter the correct answers for each question here."
-                            rows={6}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-                <TabsContent value="ai" className="space-y-4">
-                  <div className="p-4 bg-gray-50 rounded-md">
-                    <p className="text-sm text-gray-500">
-                      The AI will analyze your test PDF and generate appropriate
-                      rubrics and answer keys. You will be able to review and
-                      edit them before finalizing.
-                    </p>
-                  </div>
-                </TabsContent>
-              </Tabs>
+              <FormField
+                control={form.control}
+                name="answerKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Answer Key</FormLabel>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleGenerateAnswerKey}
+                        disabled={isGeneratingAnswerKey || !selectedFile}
+                      >
+                        {isGeneratingAnswerKey ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Generate with AI
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter the correct answers for each question here."
+                        rows={6}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button
