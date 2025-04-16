@@ -1,7 +1,16 @@
 "use server";
 
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
+
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_API_KEY,
+  baseURL: "https://gateway.helicone.ai/v1beta",
+  headers: {
+    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
+    "Helicone-Target-URL": "https://generativelanguage.googleapis.com",
+  },
+});
 
 export async function generateAssessmentRubric(
   assessmentFile: File
