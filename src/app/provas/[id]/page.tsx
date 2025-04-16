@@ -45,18 +45,12 @@ type Exam = {
 type ExamAnswer = {
   id: number;
   examId: number;
-  studentId: number;
-  answersUrl: string | null;
+  name: string;
+  answerSheetUrl: string | null;
   score: number;
   feedback: string | null;
   createdAt: Date;
   updatedAt: Date;
-  student: {
-    id: number;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
 };
 
 export default function ExamDetailsPage() {
@@ -94,11 +88,7 @@ export default function ExamDetailsPage() {
         const result = await db.query.examsTable.findFirst({
           where: eq(examsTable.id, parseInt(examId)),
           with: {
-            examAnswers: {
-              with: {
-                student: true,
-              },
-            },
+            examAnswers: true,
           },
         });
 
@@ -227,10 +217,7 @@ export default function ExamDetailsPage() {
     );
   }
 
-  const uniqueStudentIds = new Set(
-    exam.examAnswers.map((answer) => answer.studentId)
-  );
-  const studentsGraded = uniqueStudentIds.size;
+  const answersCount = exam.examAnswers.length;
 
   const createdDate =
     exam.createdAt instanceof Date
@@ -241,23 +228,12 @@ export default function ExamDetailsPage() {
   let highestScore = 0;
   let lowestScore = 0;
 
-  if (studentsGraded > 0) {
-    const studentScores = Array.from(uniqueStudentIds).map((studentId) => {
-      const studentAnswers = exam.examAnswers.filter(
-        (answer) => answer.studentId === studentId
-      );
-      const totalScoreForStudent = studentAnswers.reduce(
-        (sum, answer) => sum + answer.score,
-        0
-      );
-      return totalScoreForStudent;
-    });
-
+  if (answersCount > 0) {
+    const scores = exam.examAnswers.map((answer) => answer.score);
     averageScore =
-      studentScores.reduce((sum, score) => sum + score, 0) /
-      studentScores.length;
-    highestScore = Math.max(...studentScores);
-    lowestScore = Math.min(...studentScores);
+      scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    highestScore = Math.max(...scores);
+    lowestScore = Math.min(...scores);
   }
 
   return (
@@ -277,15 +253,15 @@ export default function ExamDetailsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Students Graded
+              Answer Sheets Graded
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {studentsGraded} / {studentsGraded}
+              {answersCount} / {answersCount}
             </div>
             <p className="text-sm text-gray-500">
-              {studentsGraded > 0 ? "In progress" : "No submissions"}
+              {answersCount > 0 ? "In progress" : "No submissions"}
             </p>
           </CardContent>
         </Card>
@@ -311,7 +287,7 @@ export default function ExamDetailsPage() {
         <Link href={`/answers/upload?examId=${examId}`}>
           <Button>
             <Upload className="h-4 w-4 mr-2" />
-            Upload Student Answers
+            Upload Answer Sheets
           </Button>
         </Link>
         {exam?.url && (
@@ -384,7 +360,7 @@ export default function ExamDetailsPage() {
             <CardHeader>
               <CardTitle>Grading Rubric</CardTitle>
               <CardDescription>
-                Criteria used for grading student answers
+                Criteria used for grading answer sheets
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -445,10 +421,12 @@ export default function ExamDetailsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Test Results</CardTitle>
-              <CardDescription>Overview of student performance</CardDescription>
+              <CardDescription>
+                Overview of answer sheet performance
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {studentsGraded > 0 ? (
+              {answersCount > 0 ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-gray-50 rounded-lg">
@@ -481,7 +459,7 @@ export default function ExamDetailsPage() {
                   <Link href={`/answers/upload?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Student Answers
+                      Upload Answer Sheets
                     </Button>
                   </Link>
                 </div>

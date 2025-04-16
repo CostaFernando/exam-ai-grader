@@ -57,18 +57,12 @@ type Exam = {
 type ExamAnswer = {
   id: number;
   examId: number;
-  studentId: number;
-  answersUrl: string | null;
+  name: string;
+  answerSheetUrl: string | null;
   score: number;
   feedback: string | null;
   createdAt: Date;
   updatedAt: Date;
-  student: {
-    id: number;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
 };
 
 export default function ExamsPage() {
@@ -101,11 +95,7 @@ export default function ExamsPage() {
         setLoading(true);
         const result = await db.query.examsTable.findMany({
           with: {
-            examAnswers: {
-              with: {
-                student: true,
-              },
-            },
+            examAnswers: true,
           },
         });
         setExams(result);
@@ -240,17 +230,14 @@ export default function ExamsPage() {
                   <TableRow>
                     <TableHead>Test Name</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Students Graded</TableHead>
+                    <TableHead>Answer Sheets Graded</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredExams.map((exam) => {
-                    const uniqueStudentIds = new Set(
-                      exam.examAnswers.map((answer) => answer.studentId)
-                    );
-                    const studentsGraded = uniqueStudentIds.size;
+                    const answersGraded = exam.examAnswers.length;
 
                     const createdDate =
                       exam.createdAt instanceof Date
@@ -264,7 +251,7 @@ export default function ExamsPage() {
                         </TableCell>
                         <TableCell>{createdDate}</TableCell>
                         <TableCell>
-                          {studentsGraded} / {studentsGraded}
+                          {answersGraded} / {answersGraded}
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStatusVariant(exam.status)}>
@@ -294,7 +281,7 @@ export default function ExamsPage() {
                               <Link href={`/answers/upload?testId=${exam.id}`}>
                                 <DropdownMenuItem>
                                   <Plus className="h-4 w-4 mr-2" />
-                                  Add Student Answers
+                                  Add Answer Sheets
                                 </DropdownMenuItem>
                               </Link>
                               <DropdownMenuItem

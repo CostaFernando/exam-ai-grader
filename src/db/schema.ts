@@ -30,29 +30,14 @@ export const examsTableRelations = relations(examsTable, ({ many }) => ({
   examAnswers: many(examAnswersTable),
 }));
 
-export const studentsTable = pgTable("students", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: text().notNull(),
-  createdAt: timestamp().defaultNow(),
-  updatedAt: timestamp().defaultNow(),
-});
-
-export const studentsTableRelations = relations(studentsTable, ({ many }) => ({
-  examAnswers: many(examAnswersTable),
-}));
-
 export const examAnswersTable = pgTable("exam_answers", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: text().notNull(),
   examId: integer()
     .notNull()
     .references(() => examsTable.id, { onDelete: "cascade" }),
-  studentId: integer()
-    .notNull()
-    .references(() => studentsTable.id, {
-      onDelete: "cascade",
-    }),
-  answersUrl: text(),
-  score: numeric({ precision: 3, scale: 2, mode: "number" }).notNull(),
+  answerSheetUrl: text().notNull(),
+  score: numeric({ precision: 3, scale: 2, mode: "number" }),
   feedback: text(),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp().defaultNow(),
@@ -64,10 +49,6 @@ export const examAnswersTableRelations = relations(
     exam: one(examsTable, {
       fields: [examAnswersTable.examId],
       references: [examsTable.id],
-    }),
-    student: one(studentsTable, {
-      fields: [examAnswersTable.studentId],
-      references: [studentsTable.id],
     }),
   })
 );
