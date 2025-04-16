@@ -17,12 +17,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploader } from "@/components/file-uploader";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { initializeDatabase } from "@/db";
 import { eq } from "drizzle-orm";
 import { examsTable } from "@/db/schema";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { toast } from "sonner";
+import {
+  generateAssessmentRubric,
+  generateAnswerKey,
+} from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
 
 type Exam = {
   id: number;
@@ -44,6 +48,8 @@ export default function EditExamPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isGeneratingRubric, setIsGeneratingRubric] = useState(false);
+  const [isGeneratingAnswerKey, setIsGeneratingAnswerKey] = useState(false);
 
   useEffect(() => {
     async function initializeDatabaseAndSetDb() {
@@ -92,12 +98,11 @@ export default function EditExamPage() {
     if (!exam) return;
 
     if (files.length === 0) {
-      // User cleared the file selection
+      setSelectedFile(null);
       return;
     }
 
     try {
-      // Take the first file if multiple were provided
       const file = files[0];
       setSelectedFile(file);
       const fileRef = await storeFileInIndexedDB(file);
@@ -105,6 +110,44 @@ export default function EditExamPage() {
     } catch (error) {
       console.error("Error storing file:", error);
       toast.error("Failed to upload file");
+    }
+  };
+
+  const handleGenerateRubric = async () => {
+    if (!selectedFile) {
+      toast.error("Please upload a test PDF first");
+      return;
+    }
+
+    setIsGeneratingRubric(true);
+    try {
+      const rubric = await generateAssessmentRubric(selectedFile);
+      setExam({ ...exam!, gradingRubric: rubric });
+      toast.success("Grading rubric generated successfully!");
+    } catch (error) {
+      console.error("Error generating rubric:", error);
+      toast.error("Failed to generate grading rubric");
+    } finally {
+      setIsGeneratingRubric(false);
+    }
+  };
+
+  const handleGenerateAnswerKey = async () => {
+    if (!selectedFile) {
+      toast.error("Please upload a test PDF first");
+      return;
+    }
+
+    setIsGeneratingAnswerKey(true);
+    try {
+      const answerKeyText = await generateAnswerKey(selectedFile);
+      setExam({ ...exam!, answerKey: answerKeyText });
+      toast.success("Answer key generated successfully!");
+    } catch (error) {
+      console.error("Error generating answer key:", error);
+      toast.error("Failed to generate answer key");
+    } finally {
+      setIsGeneratingAnswerKey(false);
     }
   };
 
@@ -250,7 +293,28 @@ export default function EditExamPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rubric">Grading Rubric</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="rubric">Grading Rubric</Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleGenerateRubric}
+                  disabled={isGeneratingRubric || !selectedFile}
+                >
+                  {isGeneratingRubric ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate with AI
+                    </>
+                  )}
+                </Button>
+              </div>
               <Textarea
                 id="rubric"
                 value={exam.gradingRubric || ""}
@@ -263,7 +327,28 @@ export default function EditExamPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="answerKey">Answer Key</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="answerKey">Answer Key</Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleGenerateAnswerKey}
+                  disabled={isGeneratingAnswerKey || !selectedFile}
+                >
+                  {isGeneratingAnswerKey ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate with AI
+                    </>
+                  )}
+                </Button>
+              </div>
               <Textarea
                 id="answerKey"
                 value={exam.answerKey || ""}
