@@ -43,6 +43,7 @@ export default function EditExamPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     async function initializeDatabaseAndSetDb() {
@@ -87,10 +88,18 @@ export default function EditExamPage() {
     }
   }, [db, examId]);
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (files: File[]) => {
     if (!exam) return;
 
+    if (files.length === 0) {
+      // User cleared the file selection
+      return;
+    }
+
     try {
+      // Take the first file if multiple were provided
+      const file = files[0];
+      setSelectedFile(file);
       const fileRef = await storeFileInIndexedDB(file);
       setExam({ ...exam, url: fileRef });
     } catch (error) {
@@ -231,6 +240,8 @@ export default function EditExamPage() {
               <FileUploader
                 accept=".pdf"
                 maxSize={10}
+                multiple={false}
+                file={selectedFile}
                 onFileSelect={handleFileSelect}
               />
               <p className="text-xs text-gray-500">

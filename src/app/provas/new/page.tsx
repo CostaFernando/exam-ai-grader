@@ -47,6 +47,7 @@ export default function CreateExamPage() {
   const [db, setDb] = useState<any>(null);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,8 +69,16 @@ export default function CreateExamPage() {
     initializeDatabaseAndSetDb();
   }, []);
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (files: File[]) => {
+    if (files.length === 0) {
+      form.setValue("url", "");
+      setSelectedFile(null);
+      return;
+    }
+
     try {
+      const file = files[0];
+      setSelectedFile(file);
       const fileRef = await storeFileInIndexedDB(file);
       form.setValue("url", fileRef);
     } catch (error) {
@@ -131,7 +140,6 @@ export default function CreateExamPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Display error if any */}
               {errorMessage && (
                 <div className="text-red-500 text-sm">{errorMessage}</div>
               )}
@@ -155,6 +163,8 @@ export default function CreateExamPage() {
                 <FileUploader
                   accept=".pdf"
                   maxSize={10}
+                  multiple={false}
+                  file={selectedFile}
                   onFileSelect={handleFileSelect}
                 />
                 <FormField

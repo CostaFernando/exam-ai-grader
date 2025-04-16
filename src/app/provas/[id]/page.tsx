@@ -21,10 +21,27 @@ import {
   FileText,
   Upload,
   Loader2,
+  Eye,
+  MoreHorizontal,
+  Trash2,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { initializeDatabase } from "@/db";
 import { eq } from "drizzle-orm";
-import { examsTable, examStatusEnum } from "@/db/schema";
+import { examsTable, examAnswersTable, examStatusEnum } from "@/db/schema";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { openFileFromReference, cleanupBlobUrls } from "@/lib/indexedDB";
@@ -123,6 +140,45 @@ export default function ExamDetailsPage() {
       toast.error("Failed to open file");
     } finally {
       setDownloadLoading(false);
+    }
+  };
+
+  const handleViewAnswerSheet = async (answer: ExamAnswer) => {
+    if (!answer.answerSheetUrl) return;
+
+    try {
+      setDownloadLoading(true);
+      await openFileFromReference(answer.answerSheetUrl);
+    } catch (error) {
+      console.error("Error opening file:", error);
+      toast.error("Failed to open file");
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
+  const handleDeleteAnswerSheet = async (answerId: number) => {
+    if (!db) return;
+
+    if (!window.confirm("Are you sure you want to delete this answer sheet?")) {
+      return;
+    }
+
+    try {
+      await db
+        .delete(examAnswersTable)
+        .where(eq(examAnswersTable.id, answerId));
+
+      // Update the local state
+      setExam({
+        ...exam!,
+        examAnswers: exam!.examAnswers.filter((a) => a.id !== answerId),
+      });
+
+      toast.success("Answer sheet deleted successfully");
+    } catch (error) {
+      console.error("Error deleting answer sheet:", error);
+      toast.error("Failed to delete answer sheet");
     }
   };
 
@@ -311,6 +367,7 @@ export default function ExamDetailsPage() {
           <TabsTrigger value="details">Test Details</TabsTrigger>
           <TabsTrigger value="rubric">Grading Rubric</TabsTrigger>
           <TabsTrigger value="answerKey">Answer Key</TabsTrigger>
+          <TabsTrigger value="answerSheets">Answer Sheets</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
 
@@ -414,6 +471,110 @@ export default function ExamDetailsPage() {
                 </Button>
               </Link>
             </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="answerSheets">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Answer Sheets</CardTitle>
+                <CardDescription>
+                  Manage individual answer sheets for this exam
+                </CardDescription>
+              </div>
+              <Link href={`/answers/upload?examId=${examId}`}>
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Add Answer Sheets
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {answersCount > 0 ? (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student Name</TableHead>
+                        <TableHead>Uploaded</TableHead>
+                        <TableHead>Score</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {exam.examAnswers.map((answer) => {
+                        const createdDate =
+                          answer.createdAt instanceof Date
+                            ? format(answer.createdAt, "yyyy-MM-dd")
+                            : format(new Date(answer.createdAt), "yyyy-MM-dd");
+
+                        return (
+                          <TableRow key={answer.id}>
+                            <TableCell className="font-medium">
+                              {answer.name}
+                            </TableCell>
+                            <TableCell>{createdDate}</TableCell>
+                            <TableCell>{answer.score}</TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  answer.feedback ? "secondary" : "default"
+                                }
+                              >
+                                {answer.feedback ? "Graded" : "Processing"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {answer.answerSheetUrl && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleViewAnswerSheet(answer)
+                                      }
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View Sheet
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDeleteAnswerSheet(answer.id)
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+                                    <span className="text-red-500">Delete</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-gray-500 mb-4">
+                    No answer sheets available yet
+                  </p>
+                  <Link href={`/answers/upload?examId=${examId}`}>
+                    <Button>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Answer Sheets
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
           </Card>
         </TabsContent>
 
