@@ -30,10 +30,8 @@ import { Loader2, Sparkles } from "lucide-react";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { initializeDatabase } from "@/db";
 import { examsTable } from "@/db/schema";
-import {
-  generateAssessmentRubric,
-  generateAnswerKey,
-} from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
+import { generateAssessmentRubric } from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
+import { generateAnswerKey } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
 
 const formSchema = z.object({
   name: z.string().min(1, "Test name is required"),

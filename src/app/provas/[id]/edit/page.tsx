@@ -23,10 +23,8 @@ import { eq } from "drizzle-orm";
 import { examsTable } from "@/db/schema";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { toast } from "sonner";
-import {
-  generateAssessmentRubric,
-  generateAnswerKey,
-} from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
+import { generateAssessmentRubric } from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
+import { generateAnswerKey } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
 
 type Exam = {
   id: number;
