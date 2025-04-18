@@ -35,7 +35,7 @@ interface AnswerSheet {
   fileUrl: string | null;
 }
 
-export default function UploadAnswers() {
+export default function UploadAnswersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const examIdParam = searchParams.get("examId");
