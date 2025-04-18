@@ -1,29 +1,25 @@
 "use server";
 
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
+import { getAIProvider, Provider, ModelName } from "@/lib/ai-sdk";
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_API_KEY,
-  baseURL: "https://gateway.helicone.ai/v1beta",
-  headers: {
-    "Helicone-Auth": `Bearer ${process.env.HELICONE_API_KEY}`,
-    "Helicone-Target-URL": "https://generativelanguage.googleapis.com",
-  },
-});
-
-export async function generateAnswerKey(assessmentFile: File): Promise<string> {
+export async function generateAnswerKey(
+  assessmentFile: File,
+  provider: Provider = "google",
+  modelName: ModelName = "gemini-2.0-flash"
+): Promise<string> {
   const system = `Você é um professor especialista em avaliações. Você receberá um arquivo com as questões de uma prova e, baseado nisso, escreverá o gabarito com solução para cada questão.`;
 
+  const aiProvider = getAIProvider(provider);
+
   const { text } = await generateText({
-    model: google("gemini-2.0-flash"),
+    model: aiProvider(modelName),
     headers: {
       "Helicone-Property-Feature": "generate-answer-key",
       "Helicone-Property-Source": "assessment-ai-grader",
     },
     system,
-    temperature: 0.7,
-    maxTokens: 8000,
+    temperature: 1,
     messages: [
       {
         role: "user",

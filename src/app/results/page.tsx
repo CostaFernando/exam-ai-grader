@@ -26,6 +26,14 @@ import { ResultsChart } from "@/components/results-chart";
 import { initializeDatabase } from "@/db";
 import { examsTable, examAnswersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type Exam = {
   id: number;
@@ -38,6 +46,7 @@ type ExamAnswer = {
   name: string;
   score: number | null;
   feedback: string | null;
+  answerSheetUrl?: string;
 };
 
 type GradingStatus = {
@@ -63,6 +72,7 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [averageScore, setAverageScore] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<ExamAnswer | null>(null);
 
   // Fetch exams
   useEffect(() => {
@@ -140,6 +150,14 @@ export default function ResultsPage() {
 
     fetchAnswers();
   }, [selectedExam]);
+
+  const openFeedbackModal = (answer: ExamAnswer) => {
+    setSelectedAnswer(answer);
+  };
+
+  const closeFeedbackModal = () => {
+    setSelectedAnswer(null);
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -316,6 +334,8 @@ export default function ResultsPage() {
                           variant="outline"
                           size="sm"
                           className="w-full mt-2"
+                          onClick={() => openFeedbackModal(answer)}
+                          disabled={!answer.feedback && !answer.score}
                         >
                           <FileText className="h-4 w-4 mr-2" />
                           View Feedback
@@ -335,6 +355,65 @@ export default function ResultsPage() {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Feedback Modal */}
+          <Dialog
+            open={!!selectedAnswer}
+            onOpenChange={(open) => {
+              if (!open) closeFeedbackModal();
+            }}
+          >
+            <DialogContent className="sm:max-w-3xl max-h-[90vh]">
+              <DialogHeader>
+                <DialogTitle className="text-xl">Student Feedback</DialogTitle>
+                <DialogDescription className="text-base">
+                  {selectedAnswer?.name} - Score: {selectedAnswer?.score || 0}
+                  /100
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-4">
+                <h3 className="font-medium text-lg mb-2">Feedback:</h3>
+                {selectedAnswer?.feedback ? (
+                  <div className="bg-muted p-6 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto text-base leading-relaxed">
+                    {selectedAnswer.feedback}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic text-base">
+                    No feedback available yet.
+                  </p>
+                )}
+              </div>
+
+              {selectedAnswer?.answerSheetUrl && (
+                <div className="mt-6">
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="w-full text-base py-5"
+                  >
+                    <a
+                      href={selectedAnswer.answerSheetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Original Answer Sheet
+                    </a>
+                  </Button>
+                </div>
+              )}
+
+              <DialogFooter className="mt-6">
+                <Button
+                  onClick={closeFeedbackModal}
+                  size="lg"
+                  className="text-base px-8"
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>

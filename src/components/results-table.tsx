@@ -16,6 +16,14 @@ import { FileText, Search, Loader2 } from "lucide-react";
 import { initializeDatabase } from "@/db";
 import { eq } from "drizzle-orm";
 import { examsTable, examAnswersTable } from "@/db/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type ExamAnswer = {
   id: number;
@@ -37,6 +45,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
   const [answers, setAnswers] = useState<ExamAnswer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedAnswer, setSelectedAnswer] = useState<ExamAnswer | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -80,6 +89,14 @@ export function ResultsTable({ examId }: ResultsTableProps) {
     if (!answer.score && !answer.feedback) return "pending";
     if (answer.score && answer.feedback) return "completed";
     return "in-progress";
+  };
+
+  const openFeedbackModal = (answer: ExamAnswer) => {
+    setSelectedAnswer(answer);
+  };
+
+  const closeFeedbackModal = () => {
+    setSelectedAnswer(null);
   };
 
   if (loading) {
@@ -166,10 +183,8 @@ export function ResultsTable({ examId }: ResultsTableProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          // View feedback or answer details
-                          // This could open a modal or navigate to a details page
-                        }}
+                        onClick={() => openFeedbackModal(answer)}
+                        disabled={status === "pending"}
                       >
                         <FileText className="h-4 w-4" />
                       </Button>
@@ -181,6 +196,64 @@ export function ResultsTable({ examId }: ResultsTableProps) {
           </Table>
         </div>
       )}
+
+      {/* Feedback Modal */}
+      <Dialog
+        open={!!selectedAnswer}
+        onOpenChange={(open) => {
+          if (!open) closeFeedbackModal();
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Student Feedback</DialogTitle>
+            <DialogDescription className="text-base">
+              {selectedAnswer?.name} - Score: {selectedAnswer?.score || 0}/100
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4">
+            <h3 className="font-medium text-lg mb-2">Feedback:</h3>
+            {selectedAnswer?.feedback ? (
+              <div className="bg-muted p-6 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto text-base leading-relaxed">
+                {selectedAnswer.feedback}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic text-base">
+                No feedback available yet.
+              </p>
+            )}
+          </div>
+
+          {selectedAnswer?.answerSheetUrl && (
+            <div className="mt-6">
+              <Button
+                variant="outline"
+                asChild
+                className="w-full text-base py-5"
+              >
+                <a
+                  href={selectedAnswer.answerSheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Original Answer Sheet
+                </a>
+              </Button>
+            </div>
+          )}
+
+          <DialogFooter className="mt-6">
+            <Button
+              onClick={closeFeedbackModal}
+              size="lg"
+              className="text-base px-8"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

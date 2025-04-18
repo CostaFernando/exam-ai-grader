@@ -47,6 +47,7 @@ import { examsTable, examAnswersTable, type examStatusEnum } from "@/db/schema";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { openFileFromReference, cleanupBlobUrls } from "@/lib/indexedDB";
+import { gradeAnswerSheet } from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
 
 type Exam = {
   id: number;
@@ -78,6 +79,7 @@ export default function ExamDetailsPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const shouldGrade = searchParams.get("grade") === "true";
+  const shouldRegrade = searchParams.get("regrade") === "true";
   const activeTab = tabParam || "details";
   const examId = params.id;
 
@@ -231,46 +233,241 @@ export default function ExamDetailsPage() {
     }
   };
 
-  const gradeAnswers = useCallback(async () => {
-    if (!exam || exam.examAnswers.length === 0) return;
+  const gradeAnswers = useCallback(
+    async (forceRegrade: boolean = false) => {
+      if (!exam || exam.examAnswers.length === 0) return;
+
+      try {
+        // Get answer sheets to grade - either ungraded ones or all if forceRegrade is true
+        const answersToGrade = forceRegrade
+          ? exam.examAnswers
+          : exam.examAnswers.filter(
+              (answer) => !answer.score || answer.score === 0
+            );
+
+        if (answersToGrade.length === 0) {
+          toast.success("All answer sheets are already graded!");
+          return;
+        }
+
+        const toastId = "grading";
+        toast.loading(
+          `${forceRegrade ? "Regrading" : "Grading"} ${
+            answersToGrade.length
+          } answer sheets...`,
+          {
+            id: toastId,
+          }
+        );
+
+        // Prepare the exam for grading - get the PDF and rubric data
+        if (!exam.url) {
+          throw new Error("Exam PDF not found");
+        }
+
+        if (!exam.gradingRubric) {
+          throw new Error("Grading rubric not found");
+        }
+
+        if (!exam.answerKey) {
+          throw new Error("Answer key not found");
+        }
+
+        // Instead of opening the file, get the file object directly
+        const examFileObject = await getFileFromReference(exam.url);
+        if (!examFileObject) {
+          throw new Error("Could not retrieve exam file");
+        }
+
+        // Grade each answer sheet in parallel
+        const results = await Promise.all(
+          answersToGrade.map(async (answer, index) => {
+            try {
+              // Skip if no answer sheet URL
+              if (!answer.answerSheetUrl) {
+                return { ...answer, error: "No answer sheet found" };
+              }
+
+              // Update progress
+              toast.loading(
+                `${forceRegrade ? "Regrading" : "Grading"} ${index + 1}/${
+                  answersToGrade.length
+                }: ${answer.name}`,
+                {
+                  id: toastId,
+                }
+              );
+
+              // Get the answer sheet file directly as a File object
+              const answerFileObject = await getFileFromReference(
+                answer.answerSheetUrl
+              );
+              if (!answerFileObject) {
+                throw new Error("Could not retrieve answer sheet file");
+              }
+
+              // Grade the answer sheet
+              const gradeResult = await gradeAnswerSheet(
+                examFileObject,
+                answerFileObject,
+                exam.gradingRubric,
+                exam.answerKey
+              );
+
+              // Update the database with the grade result
+              if (db) {
+                await db
+                  .update(examAnswersTable)
+                  .set({
+                    score: gradeResult.score,
+                    feedback: gradeResult.feedback,
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(examAnswersTable.id, answer.id));
+              }
+
+              return {
+                ...answer,
+                score: gradeResult.score,
+                feedback: gradeResult.feedback,
+              };
+            } catch (error) {
+              console.error(
+                `Error grading answer sheet for ${answer.name}:`,
+                error
+              );
+              return { ...answer, error: "Failed to grade" };
+            }
+          })
+        );
+
+        // Count successful grades
+        const successfulGrades = results.filter((r) => !r.error).length;
+
+        // Update the exam state with the new grades
+        setExam({
+          ...exam,
+          examAnswers: exam.examAnswers.map((original) => {
+            const updated = results.find((r) => r.id === original.id);
+            return updated || original;
+          }),
+        });
+
+        toast.success(
+          `Successfully ${
+            forceRegrade ? "regraded" : "graded"
+          } ${successfulGrades} answer sheets!`,
+          {
+            id: toastId,
+          }
+        );
+
+        if (successfulGrades > 0) {
+          router.push(`/results?examId=${examId}`);
+        }
+      } catch (error) {
+        console.error(
+          `Error ${forceRegrade ? "regrading" : "grading"} answers:`,
+          error
+        );
+        toast.error(
+          `Failed to ${forceRegrade ? "regrade" : "grade"}: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          { id: "grading" }
+        );
+      }
+    },
+    [exam, examId, router, db]
+  );
+
+  // Helper function to get a File object from an IndexedDB reference
+  async function getFileFromReference(fileRef: string): Promise<File | null> {
+    if (!fileRef.startsWith("idb-file://")) {
+      return null;
+    }
 
     try {
-      toast.loading("Grading answer sheets...", { id: "grading" });
-
-      // Call the API to grade all answers for this exam
-      const response = await fetch("/api/grade", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          examId: examId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to grade answers");
+      const fileInfo = parseFileReference(fileRef);
+      if (!fileInfo) {
+        return null;
       }
 
-      const result = await response.json();
-
-      toast.success(
-        `Successfully graded ${result.completedCount} answer sheets!`,
-        { id: "grading" }
-      );
-      router.push(`/results?examId=${examId}`);
+      const file = await getFileById(fileInfo.id);
+      return file;
     } catch (error) {
-      console.error("Error grading answers:", error);
-      toast.error("Failed to grade answer sheets", { id: "grading" });
+      console.error("Error retrieving file:", error);
+      return null;
     }
-  }, [exam, examId, router]);
+  }
+
+  // Parse file reference from URL
+  function parseFileReference(
+    fileRef: string
+  ): { id: string; name: string; type: string } | null {
+    try {
+      if (!fileRef.startsWith("idb-file://")) {
+        return null;
+      }
+
+      const encodedInfo = fileRef.substring("idb-file://".length);
+      const fileInfo = JSON.parse(atob(encodedInfo));
+      return fileInfo;
+    } catch (error) {
+      console.error("Error parsing file reference:", error);
+      return null;
+    }
+  }
+
+  // Get file from IndexedDB by ID
+  async function getFileById(id: string | number): Promise<File | null> {
+    return new Promise<File | null>((resolve, reject) => {
+      const request = indexedDB.open("exams_ai_grader", 1);
+
+      request.onerror = () => {
+        reject("IndexedDB error");
+      };
+
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(["files"], "readonly");
+        const store = transaction.objectStore("files");
+
+        let keyToUse = id;
+        if (typeof id === "string" && !isNaN(Number(id))) {
+          keyToUse = Number(id);
+        }
+
+        const getRequest = store.get(keyToUse);
+
+        getRequest.onsuccess = (event) => {
+          const result = (event.target as IDBRequest).result;
+          if (result && result.data instanceof File) {
+            resolve(result.data);
+          } else if (result && result.data) {
+            resolve(result.data);
+          } else {
+            resolve(null);
+          }
+        };
+
+        getRequest.onerror = () => {
+          reject("Error retrieving file from IndexedDB");
+        };
+      };
+    });
+  }
 
   useEffect(() => {
     // If the tab is set to answerSheets and there's a 'grade=true' parameter, trigger grading
-    if (tabParam === "answerSheets" && shouldGrade) {
-      gradeAnswers();
+    if (tabParam === "answerSheets") {
+      if (shouldGrade) {
+        gradeAnswers(false);
+      } else if (shouldRegrade) {
+        gradeAnswers(true);
+      }
     }
-  }, [tabParam, shouldGrade, gradeAnswers]);
+  }, [tabParam, shouldGrade, shouldRegrade, gradeAnswers]);
 
   if (loading) {
     return (
@@ -563,7 +760,16 @@ export default function ExamDetailsPage() {
                         Add More Sheets
                       </Button>
                     </Link>
-                    <Button onClick={gradeAnswers}>
+                    {exam.examAnswers.some((a) => a.feedback) && (
+                      <Button
+                        variant="outline"
+                        onClick={() => gradeAnswers(true)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Regrade All
+                      </Button>
+                    )}
+                    <Button onClick={() => gradeAnswers(false)}>
                       <FileText className="h-4 w-4 mr-2" />
                       Grade Answers
                     </Button>
@@ -622,6 +828,26 @@ export default function ExamDetailsPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                  {answer.feedback && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        const singleAnswerToRegrade = {
+                                          ...exam,
+                                        };
+                                        singleAnswerToRegrade.examAnswers = [
+                                          answer,
+                                        ];
+                                        setExam(singleAnswerToRegrade);
+                                        gradeAnswers(true).then(() => {
+                                          // Restore the full list after regrading
+                                          fetchExam();
+                                        });
+                                      }}
+                                    >
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      Regrade
+                                    </DropdownMenuItem>
+                                  )}
                                   {answer.answerSheetUrl && (
                                     <DropdownMenuItem
                                       onClick={() =>
