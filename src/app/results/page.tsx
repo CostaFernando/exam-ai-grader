@@ -21,8 +21,8 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText, RefreshCw, Loader2 } from "lucide-react";
-import { ResultsTable } from "@/components/results-table";
-import { ResultsChart } from "@/components/results-chart";
+import { ResultsTable } from "@/app/results/_components/results-table";
+import { ResultsChart } from "@/app/results/_components/results-chart";
 import { initializeDatabase } from "@/db";
 import { examsTable, examAnswersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
