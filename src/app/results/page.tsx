@@ -69,33 +69,34 @@ export default function ResultsPage() {
     inProgress: 0,
     pending: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [fetchingExams, setFetchingExams] = useState(true);
   const [error, setError] = useState("");
   const [averageScore, setAverageScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<ExamAnswer | null>(null);
 
-  // Fetch exams
   useEffect(() => {
     async function fetchExams() {
       try {
+        setFetchingExams(true);
         const db = await initializeDatabase();
         const result = await db.query.examsTable.findMany();
         setExams(result);
 
-        // If we have an examId in the URL and it's not already set
         if (paramExamId && !selectedExam) {
           setSelectedExam(paramExamId);
         }
       } catch (err) {
         console.error("Error fetching exams:", err);
         setError("Failed to load exams");
+      } finally {
+        setFetchingExams(false);
       }
     }
 
     fetchExams();
   }, [paramExamId, selectedExam]);
 
-  // Fetch answers for selected exam
   useEffect(() => {
     async function fetchAnswers() {
       if (!selectedExam) return;
@@ -111,7 +112,6 @@ export default function ResultsPage() {
 
         setAnswers(result);
 
-        // Calculate grading status
         const total = result.length;
         const completed = result.filter(
           (a) => a.score !== null && a.feedback !== null
@@ -130,7 +130,6 @@ export default function ResultsPage() {
           pending,
         });
 
-        // Calculate average score
         if (completed > 0) {
           const totalScore = result.reduce(
             (sum, answer) => sum + (answer.score || 0),
@@ -183,18 +182,26 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      {loading ? (
+      {fetchingExams ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          <span className="ml-2 text-gray-500">Loading results...</span>
+          <span className="ml-2 text-gray-500">Loading tests...</span>
         </div>
       ) : error ? (
         <div className="py-10 text-center">
           <p className="text-red-500">{error}</p>
         </div>
       ) : !selectedExam ? (
-        <div className="text-center py-10">
-          <p className="text-gray-500">Please select a test to view results</p>
+        <div className="text-center py-20">
+          <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+          <p className="text-xl text-gray-500">
+            Please select a test to view results
+          </p>
+        </div>
+      ) : loading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <span className="ml-2 text-gray-500">Loading results...</span>
         </div>
       ) : (
         <>
