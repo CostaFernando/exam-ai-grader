@@ -48,6 +48,10 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { openFileFromReference, cleanupBlobUrls } from "@/lib/indexedDB";
 import { gradeAnswerSheet } from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
+import {
+  gradeMultipleAnswerSheets,
+  type GradeResult,
+} from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
 
 type Exam = {
   id: number;
@@ -236,149 +240,63 @@ export default function ExamDetailsPage() {
   const gradeAnswers = useCallback(
     async (forceRegrade: boolean = false) => {
       if (!exam || exam.examAnswers.length === 0) return;
+      const answersToGrade = forceRegrade
+        ? exam.examAnswers
+        : exam.examAnswers.filter((a) => !a.score || a.score === 0);
+      if (answersToGrade.length === 0) {
+        toast.success("All answer sheets are already graded!");
+        return;
+      }
 
-      try {
-        // Get answer sheets to grade - either ungraded ones or all if forceRegrade is true
-        const answersToGrade = forceRegrade
-          ? exam.examAnswers
-          : exam.examAnswers.filter(
-              (answer) => !answer.score || answer.score === 0
-            );
+      // load exam PDF
+      const examFileObject = await getFileFromReference(exam.url!);
+      if (!examFileObject) throw new Error("Could not retrieve exam file");
 
-        if (answersToGrade.length === 0) {
-          toast.success("All answer sheets are already graded!");
-          return;
+      // load all answer sheet Files
+      const answersWithFiles = await Promise.all(
+        answersToGrade.map(async (ans) => {
+          const file = await getFileFromReference(ans.answerSheetUrl!);
+          return { id: ans.id, file: file! };
+        })
+      );
+
+      // call server-action
+      const results: GradeResult[] = await gradeMultipleAnswerSheets(
+        examFileObject,
+        answersWithFiles,
+        exam.gradingRubric ?? "",
+        exam.answerKey ?? ""
+      );
+
+      // update DB + state
+      let successful = 0;
+      for (const res of results) {
+        if (res.score != null && db) {
+          await db
+            .update(examAnswersTable)
+            .set({
+              score: res.score,
+              feedback: res.feedback,
+              updatedAt: new Date(),
+            })
+            .where(eq(examAnswersTable.id, res.id));
+          successful++;
         }
+      }
 
-        const toastId = "grading";
-        toast.loading(
-          `${forceRegrade ? "Regrading" : "Grading"} ${
-            answersToGrade.length
-          } answer sheets...`,
-          {
-            id: toastId,
-          }
-        );
+      // refresh state from DB
+      fetchExam();
 
-        // Prepare the exam for grading - get the PDF and rubric data
-        if (!exam.url) {
-          throw new Error("Exam PDF not found");
-        }
-
-        if (!exam.gradingRubric) {
-          throw new Error("Grading rubric not found");
-        }
-
-        if (!exam.answerKey) {
-          throw new Error("Answer key not found");
-        }
-
-        // Instead of opening the file, get the file object directly
-        const examFileObject = await getFileFromReference(exam.url);
-        if (!examFileObject) {
-          throw new Error("Could not retrieve exam file");
-        }
-
-        // Grade each answer sheet in parallel
-        const results: (ExamAnswer & { error?: string })[] = await Promise.all(
-          answersToGrade.map(async (answer, index) => {
-            try {
-              // Skip if no answer sheet URL
-              if (!answer.answerSheetUrl) {
-                return { ...answer, error: "No answer sheet found" };
-              }
-
-              // Update progress
-              toast.loading(
-                `${forceRegrade ? "Regrading" : "Grading"} ${index + 1}/${
-                  answersToGrade.length
-                }: ${answer.name}`,
-                {
-                  id: toastId,
-                }
-              );
-
-              // Get the answer sheet file directly as a File object
-              const answerFileObject = await getFileFromReference(
-                answer.answerSheetUrl
-              );
-              if (!answerFileObject) {
-                throw new Error("Could not retrieve answer sheet file");
-              }
-
-              // Grade the answer sheet
-              const gradeResult = await gradeAnswerSheet(
-                examFileObject,
-                answerFileObject,
-                exam.gradingRubric ?? "",
-                exam.answerKey ?? ""
-              );
-
-              // Update the database with the grade result
-              if (db) {
-                await db
-                  .update(examAnswersTable)
-                  .set({
-                    score: gradeResult.score,
-                    feedback: gradeResult.feedback,
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(examAnswersTable.id, answer.id));
-              }
-
-              return {
-                ...answer,
-                score: gradeResult.score,
-                feedback: gradeResult.feedback,
-              };
-            } catch (error) {
-              console.error(
-                `Error grading answer sheet for ${answer.name}:`,
-                error
-              );
-              return { ...answer, error: "Failed to grade" };
-            }
-          })
-        );
-
-        // Count successful grades
-        const successfulGrades = results.filter((r) => !r.error).length;
-
-        // Update the exam state with the new grades
-        setExam({
-          ...exam,
-          examAnswers: exam.examAnswers.map((original) => {
-            const updated = results.find((r) => r.id === original.id);
-            return updated || original;
-          }),
-        });
-
-        toast.success(
-          `Successfully ${
-            forceRegrade ? "regraded" : "graded"
-          } ${successfulGrades} answer sheets!`,
-          {
-            id: toastId,
-          }
-        );
-
-        if (successfulGrades > 0) {
-          router.push(`/results?examId=${examId}`);
-        }
-      } catch (error) {
-        console.error(
-          `Error ${forceRegrade ? "regrading" : "grading"} answers:`,
-          error
-        );
-        toast.error(
-          `Failed to ${forceRegrade ? "regrade" : "grade"}: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`,
-          { id: "grading" }
-        );
+      toast.success(
+        `Successfully ${
+          forceRegrade ? "regraded" : "graded"
+        } ${successful} answer sheets!`
+      );
+      if (successful > 0) {
+        router.push(`/results?examId=${examId}`);
       }
     },
-    [exam, examId, router, db]
+    [exam, db, examId, fetchExam, router]
   );
 
   // Helper function to get a File object from an IndexedDB reference

@@ -113,3 +113,38 @@ Diretrizes a serem seguidas:
     feedback,
   };
 }
+
+export type GradeResult = {
+  id: number;
+  score?: number;
+  feedback?: string;
+  error?: string;
+};
+
+export async function gradeMultipleAnswerSheets(
+  examFile: File,
+  answers: { id: number; file: File }[],
+  gradingRubric: string,
+  answerKey: string,
+  provider: Provider = "openai",
+  modelName: ModelName = "o4-mini"
+): Promise<GradeResult[]> {
+  const results = await Promise.all(
+    answers.map(async ({ id, file }) => {
+      try {
+        const { score, feedback } = await gradeAnswerSheet(
+          examFile,
+          file,
+          gradingRubric,
+          answerKey,
+          provider,
+          modelName
+        );
+        return { id, score, feedback };
+      } catch (err: any) {
+        return { id, error: err?.message || "Grading failed" };
+      }
+    })
+  );
+  return results;
+}
