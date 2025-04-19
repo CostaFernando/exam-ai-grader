@@ -116,36 +116,36 @@ export default function ExamDetailsPage() {
     initializeDatabaseAndSetDb();
   }, []);
 
-  useEffect(() => {
-    async function fetchExam() {
-      if (!db || !examId) return;
+  // pull fetchExam out for reuse in callbacks and effects
+  const fetchExam = useCallback(async () => {
+    if (!db || !examId) return;
 
-      try {
-        setLoading(true);
-        const result = await db.query.examsTable.findFirst({
-          where: eq(examsTable.id, Number.parseInt(examId)),
-          with: {
-            examAnswers: true,
-          },
-        });
+    try {
+      setLoading(true);
+      const result = await db.query.examsTable.findFirst({
+        where: eq(examsTable.id, Number.parseInt(examId)),
+        with: { examAnswers: true },
+      });
 
-        if (!result) {
-          setError("Exam not found");
-        } else {
-          setExam(result);
-        }
-      } catch (err) {
-        console.error("Error fetching exam:", err);
-        setError("Failed to load exam data");
-      } finally {
-        setLoading(false);
+      if (!result) {
+        setError("Exam not found");
+      } else {
+        setExam(result);
       }
+    } catch (err) {
+      console.error("Error fetching exam:", err);
+      setError("Failed to load exam data");
+    } finally {
+      setLoading(false);
     }
+  }, [db, examId]);
 
+  // use effect now simply calls the shared fetchExam
+  useEffect(() => {
     if (db && examId) {
       fetchExam();
     }
-  }, [db, examId]);
+  }, [db, examId, fetchExam]);
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -280,7 +280,7 @@ export default function ExamDetailsPage() {
         }
 
         // Grade each answer sheet in parallel
-        const results = await Promise.all(
+        const results: (ExamAnswer & { error?: string })[] = await Promise.all(
           answersToGrade.map(async (answer, index) => {
             try {
               // Skip if no answer sheet URL
@@ -310,8 +310,8 @@ export default function ExamDetailsPage() {
               const gradeResult = await gradeAnswerSheet(
                 examFileObject,
                 answerFileObject,
-                exam.gradingRubric,
-                exam.answerKey
+                exam.gradingRubric ?? "",
+                exam.answerKey ?? ""
               );
 
               // Update the database with the grade result
