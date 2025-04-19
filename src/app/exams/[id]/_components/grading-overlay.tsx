@@ -144,7 +144,7 @@ export function GradingOverlay() {
               </button>
               <button
                 className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
-                onClick={() => (window.location.href = "/provas")}
+                onClick={() => (window.location.href = "/exams")}
               >
                 Leave Anyway
               </button>

@@ -153,7 +153,7 @@ export default function CreateExamPage() {
     try {
       await createExamInDb(data);
       toast.success("Test created successfully!");
-      router.push("/provas");
+      router.push("/exams");
     } catch (error) {
       console.error("Error creating test:", error);
       const message =

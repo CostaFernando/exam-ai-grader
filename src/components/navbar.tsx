@@ -27,13 +27,13 @@ export default function Navbar() {
               Dashboard
             </Button>
           </Link>
-          <Link href="/provas">
+          <Link href="/exams">
             <Button
-              variant={isActive("/provas") ? "default" : "ghost"}
+              variant={isActive("/exams") ? "default" : "ghost"}
               size="sm"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Provas
+              Exams
             </Button>
           </Link>
           <Link href="/results">

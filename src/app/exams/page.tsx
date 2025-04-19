@@ -78,7 +78,7 @@ export default function ExamsPage() {
 
   // Update the gradeExam function to include the grade parameter
   const gradeExam = (id: number) => {
-    router.push(`/provas/${id}?tab=answerSheets&grade=true`);
+    router.push(`/exams/${id}?tab=answerSheets&grade=true`);
   };
 
   useEffect(() => {
@@ -165,8 +165,8 @@ export default function ExamsPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Provas</h1>
-        <Link href="/provas/new">
+        <h1 className="text-3xl font-bold">Exams</h1>
+        <Link href="/exams/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Create New Test
@@ -176,7 +176,7 @@ export default function ExamsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Todas Provas</CardTitle>
+          <CardTitle>Todas Exams</CardTitle>
           <CardDescription>
             Manage your created tests and their grading status
           </CardDescription>
@@ -197,7 +197,7 @@ export default function ExamsPage() {
                 <Button variant="outline">Filter</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Todas Provas</DropdownMenuItem>
+                <DropdownMenuItem>Todas Exams</DropdownMenuItem>
                 <DropdownMenuItem>Active</DropdownMenuItem>
                 <DropdownMenuItem>Completed</DropdownMenuItem>
                 <DropdownMenuItem>Archived</DropdownMenuItem>
@@ -224,7 +224,7 @@ export default function ExamsPage() {
                   : "Create your first test to get started"}
               </p>
               {!searchTerm && (
-                <Link href="/provas/new">
+                <Link href="/exams/new">
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Create New Test
@@ -275,13 +275,13 @@ export default function ExamsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <Link href={`/provas/${exam.id}`}>
+                              <Link href={`/exams/${exam.id}`}>
                                 <DropdownMenuItem>
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
                               </Link>
-                              <Link href={`/provas/${exam.id}/edit`}>
+                              <Link href={`/exams/${exam.id}/edit`}>
                                 <DropdownMenuItem>
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit Test

@@ -28,7 +28,7 @@ export default function Home() {
             <FileText size={64} className="text-gray-400" />
           </CardContent>
           <CardFooter>
-            <Link href="/provas/new" className="w-full">
+            <Link href="/exams/new" className="w-full">
               <Button className="w-full">Create New Test</Button>
             </Link>
           </CardFooter>

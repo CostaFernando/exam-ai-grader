@@ -53,7 +53,7 @@ import {
 } from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
 
 // Import the GradingOverlay component at the top of the file
-import { GradingOverlay } from "@/app/provas/[id]/_components/grading-overlay";
+import { GradingOverlay } from "@/app/exams/[id]/_components/grading-overlay";
 
 type Exam = {
   id: number;
@@ -105,7 +105,7 @@ export default function ExamDetailsPage() {
     newSearchParams.set("tab", value);
 
     // Navigate to the new URL with updated search params
-    router.push(`/provas/${examId}?${newSearchParams.toString()}`);
+    router.push(`/exams/${examId}?${newSearchParams.toString()}`);
   };
 
   useEffect(() => {
@@ -465,7 +465,7 @@ export default function ExamDetailsPage() {
             <p>The requested exam could not be found.</p>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => router.push("/provas")}>
+            <Button onClick={() => router.push("/exams")}>
               View All Exams
             </Button>
           </CardFooter>
@@ -535,7 +535,7 @@ export default function ExamDetailsPage() {
       </div>
 
       <div className="flex gap-4 mb-6">
-        <Link href={`/provas/${examId}/edit`}>
+        <Link href={`/exams/${examId}/edit`}>
           <Button variant="outline">
             <Edit className="h-4 w-4 mr-2" />
             Edit Test
@@ -545,7 +545,7 @@ export default function ExamDetailsPage() {
         {answersCount > 0 ? (
           <Button
             onClick={() => {
-              router.push(`/provas/${examId}?tab=answerSheets`);
+              router.push(`/exams/${examId}?tab=answerSheets`);
             }}
           >
             <FileText className="h-4 w-4 mr-2" />
@@ -648,7 +648,7 @@ export default function ExamDetailsPage() {
               )}
             </CardContent>
             <CardFooter>
-              <Link href={`/provas/${examId}/edit`}>
+              <Link href={`/exams/${examId}/edit`}>
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Rubric
@@ -678,7 +678,7 @@ export default function ExamDetailsPage() {
               )}
             </CardContent>
             <CardFooter>
-              <Link href={`/provas/${examId}/edit`}>
+              <Link href={`/exams/${examId}/edit`}>
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Answer Key

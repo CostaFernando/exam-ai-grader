@@ -219,7 +219,7 @@ export default function UploadAnswersPage() {
     try {
       await saveAnswerSheetsToDb();
       toast.success("Answer sheets uploaded successfully!");
-      router.push(`/provas/${selectedExam}`);
+      router.push(`/exams/${selectedExam}`);
     } catch (error) {
       console.error("Error saving answer sheets:", error);
       const message =

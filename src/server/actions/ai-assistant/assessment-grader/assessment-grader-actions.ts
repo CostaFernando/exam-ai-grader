@@ -15,7 +15,7 @@ export async function gradeAnswerSheet(
   score: number;
   feedback: string;
 }> {
-  const system = `Você é um avaliador de provas especializado, justo e rigoroso. Você fornece correções detalhadas, atribuindo notas precisas com base em critérios claros e dando feedback construtivo para ajudar os estudantes a entenderem seus erros e melhorarem continuamente.
+  const system = `Você é um avaliador de exams especializado, justo e rigoroso. Você fornece correções detalhadas, atribuindo notas precisas com base em critérios claros e dando feedback construtivo para ajudar os estudantes a entenderem seus erros e melhorarem continuamente.
 
 Você receberá as questões da prova, as rubricas (critérios) de avaliação, o gabarito e as respostas do estudante.
 
