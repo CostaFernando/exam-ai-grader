@@ -149,7 +149,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
                 <TableHead>Student</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Score</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">Feedback</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

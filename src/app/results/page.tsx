@@ -163,6 +163,31 @@ export default function ResultsPage() {
     setSelectedAnswer(null);
   };
 
+  const handleExport = () => {
+    const headers = ["Student", "Score", "Feedback"];
+    const rows = answers.map((answer) => [
+      answer.name,
+      answer.score ?? "",
+      answer.feedback ?? "",
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((item) => '"' + String(item).replace(/"/g, '""') + '"')
+          .join(",")
+      )
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "results-" + selectedExam + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -180,7 +205,11 @@ export default function ResultsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={answers.length === 0}
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
