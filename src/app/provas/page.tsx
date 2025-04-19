@@ -35,6 +35,7 @@ import {
   Edit,
   Eye,
   Loader2,
+  BarChart,
 } from "lucide-react";
 import { initializeDatabase } from "@/db";
 import { type examStatusEnum, examsTable } from "@/db/schema";
@@ -296,6 +297,12 @@ export default function ExamsPage() {
                                 <DropdownMenuItem>
                                   <Plus className="h-4 w-4 mr-2" />
                                   Add Answer Sheets
+                                </DropdownMenuItem>
+                              </Link>
+                              <Link href={`/results?examId=${exam.id}`}>
+                                <DropdownMenuItem>
+                                  <BarChart className="h-4 w-4 mr-2" />
+                                  View Results
                                 </DropdownMenuItem>
                               </Link>
                               <DropdownMenuItem
