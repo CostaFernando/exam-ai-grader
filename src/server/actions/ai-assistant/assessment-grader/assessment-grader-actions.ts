@@ -35,7 +35,7 @@ Diretrizes a serem seguidas:
   const { object } = await generateObject({
     model: aiProvider(modelName),
     headers: {
-      "Helicone-Property-Feature": "generate-answer-key",
+      "Helicone-Property-Feature": "grade-answer-sheet",
       "Helicone-Property-Source": "assessment-ai-grader",
     },
     schema: z

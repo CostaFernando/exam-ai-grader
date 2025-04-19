@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useMemo } from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { AlertCircle } from "lucide-react";
 
 type ExamAnswer = {
   id: number;
@@ -12,70 +16,103 @@ interface ResultsChartProps {
 }
 
 export function ResultsChart({ answers = [] }: ResultsChartProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Transform data for the chart
+  const { chartData, emptyData } = useMemo(() => {
+    // Filter out null scores
+    const validScores = answers
+      .filter((a) => a.score !== null)
+      .map((a) => a.score as number);
 
-  useEffect(() => {
-    if (!canvasRef.current) return;
+    // Return early if no data
+    if (validScores.length === 0) {
+      return { chartData: [], emptyData: true };
+    }
 
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return;
+    // Determine appropriate number of bins based on data range and count
+    const dataPoints = validScores.length;
+    let numberOfBins = Math.min(10, Math.max(5, Math.ceil(dataPoints / 2)));
 
-    // Create score distribution from real data
-    const scoreRanges = [
-      "0-10",
-      "11-20",
-      "21-30",
-      "31-40",
-      "41-50",
-      "51-60",
-      "61-70",
-      "71-80",
-      "81-90",
-      "91-100",
-    ];
-    const distribution = Array(10).fill(0);
+    // Create score ranges that make sense for the actual data
+    const minScore = Math.max(0, Math.floor(Math.min(...validScores)));
+    const maxScoreValue = Math.ceil(Math.max(...validScores));
 
-    // Count scores in each range
-    answers.forEach((answer) => {
-      if (answer.score !== null) {
-        const index = Math.min(Math.floor(answer.score / 10), 9);
-        distribution[index]++;
-      }
+    const range = maxScoreValue - minScore;
+    const binSize = Math.max(1, Math.ceil(range / numberOfBins));
+    // Adjust numberOfBins based on binSize to avoid too many bins
+    numberOfBins = Math.ceil(range / binSize);
+
+    // Create bins with appropriate ranges
+    const bins: number[] = Array(numberOfBins).fill(0);
+
+    // Count scores in each bin
+    validScores.forEach((score) => {
+      const binIndex = Math.min(
+        Math.floor((score - minScore) / binSize),
+        numberOfBins - 1
+      );
+      bins[binIndex]++;
     });
 
-    // Canvas dimensions
-    const width = canvasRef.current.width;
-    const height = canvasRef.current.height;
-    const barWidth = width / scoreRanges.length - 4;
-    const maxValue = Math.max(...distribution, 1); // Prevent division by zero
+    // Format data for Recharts
+    const data = bins.map((count, index) => {
+      const rangeStart = minScore + index * binSize;
+      const rangeEnd = Math.min(
+        minScore + (index + 1) * binSize,
+        maxScoreValue
+      );
+      const label = `${rangeStart}${
+        rangeStart !== rangeEnd ? `-${rangeEnd}` : ""
+      }`;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    // Draw bars
-    distribution.forEach((value, index) => {
-      const barHeight = (value / maxValue) * (height - 30);
-      const x = index * (barWidth + 4) + 2;
-      const y = height - barHeight - 20;
-
-      // Draw bar
-      ctx.fillStyle = "#a855f7";
-      ctx.fillRect(x, y, barWidth, barHeight);
-
-      // Draw label
-      ctx.fillStyle = "#6b7280";
-      ctx.font = "8px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(scoreRanges[index], x + barWidth / 2, height - 5);
+      return {
+        range: label,
+        count,
+      };
     });
+
+    return { chartData: data, emptyData: false };
   }, [answers]);
 
+  // Chart configuration
+  const chartConfig = {
+    count: {
+      label: "Submissions",
+      // color: "hsl(var(--purple-500))",
+      // use hex color
+      color: "#7c3aed",
+    },
+  } satisfies ChartConfig;
+
+  // Display empty state if no data
+  if (emptyData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[120px] w-full text-muted-foreground border rounded-md border-dashed">
+        <AlertCircle className="h-4 w-4 mb-2" />
+        <p className="text-sm">No score data available</p>
+      </div>
+    );
+  }
+
   return (
-    <canvas
-      ref={canvasRef}
-      width={300}
-      height={120}
-      className="w-full h-full"
-    />
+    <ChartContainer config={chartConfig} className="min-h-[120px] w-full">
+      <BarChart accessibilityLayer data={chartData}>
+        <CartesianGrid vertical={false} />
+        <XAxis
+          dataKey="range"
+          tickLine={false}
+          tickMargin={8}
+          axisLine={false}
+          fontSize={10}
+        />
+        <YAxis tickLine={false} tickMargin={8} axisLine={false} fontSize={10} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="count"
+          fill={chartConfig.count.color}
+          radius={4}
+          maxBarSize={50}
+        />
+      </BarChart>
+    </ChartContainer>
   );
 }

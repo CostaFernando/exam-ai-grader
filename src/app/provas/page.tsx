@@ -292,7 +292,7 @@ export default function ExamsPage() {
                                 <FileText className="h-4 w-4 mr-2" />
                                 Grade Answers
                               </DropdownMenuItem>
-                              <Link href={`/answers/upload?testId=${exam.id}`}>
+                              <Link href={`/answers/upload?examId=${exam.id}`}>
                                 <DropdownMenuItem>
                                   <Plus className="h-4 w-4 mr-2" />
                                   Add Answer Sheets

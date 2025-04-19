@@ -32,8 +32,8 @@ type ExamAnswer = {
   score: number | null;
   feedback: string | null;
   answerSheetUrl: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 };
 
 interface ResultsTableProps {
@@ -177,7 +177,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {status === "pending" ? "-" : `${answer.score || 0}/100`}
+                      {status === "pending" ? "-" : answer.score || 0}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -208,7 +208,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
           <DialogHeader>
             <DialogTitle className="text-xl">Student Feedback</DialogTitle>
             <DialogDescription className="text-base">
-              {selectedAnswer?.name} - Score: {selectedAnswer?.score || 0}/100
+              {selectedAnswer?.name} - Score: {selectedAnswer?.score || 0}
             </DialogDescription>
           </DialogHeader>
 

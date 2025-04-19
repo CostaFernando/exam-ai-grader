@@ -38,6 +38,7 @@ import {
 type Exam = {
   id: number;
   name: string;
+  maxScore?: number;
 };
 
 type ExamAnswer = {
@@ -106,6 +107,10 @@ export default function ResultsPage() {
         const db = await initializeDatabase();
         const examId = Number(selectedExam);
 
+        const exam = await db.query.examsTable.findFirst({
+          where: eq(examsTable.id, examId),
+        });
+
         const result = await db.query.examAnswersTable.findMany({
           where: eq(examAnswersTable.examId, examId),
         });
@@ -135,7 +140,7 @@ export default function ResultsPage() {
             (sum, answer) => sum + (answer.score || 0),
             0
           );
-          setAverageScore(Math.round(totalScore / completed));
+          setAverageScore(Number((totalScore / completed).toFixed(2)));
         } else {
           setAverageScore(0);
         }
@@ -265,7 +270,7 @@ export default function ResultsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col items-center justify-center h-full">
-                  <div className="text-5xl font-bold">{averageScore}%</div>
+                  <div className="text-5xl font-bold">{averageScore}</div>
                   <p className="text-sm text-gray-500 mt-2">Class Average</p>
                 </div>
               </CardContent>
@@ -278,7 +283,7 @@ export default function ResultsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[120px]">
+                <div>
                   <ResultsChart answers={answers} />
                 </div>
               </CardContent>
@@ -314,7 +319,9 @@ export default function ResultsPage() {
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <CardTitle>{answer.name}</CardTitle>
-                        <Badge>{answer.score || "-"}%</Badge>
+                        <Badge>
+                          {answer.score !== null ? answer.score : "-"}
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -331,9 +338,7 @@ export default function ResultsPage() {
 
                           <div className="text-gray-500">Score:</div>
                           <div>
-                            {answer.score !== null
-                              ? `${answer.score}/100`
-                              : "-"}
+                            {answer.score !== null ? answer.score : "-"}
                           </div>
                         </div>
 
@@ -375,7 +380,6 @@ export default function ResultsPage() {
                 <DialogTitle className="text-xl">Student Feedback</DialogTitle>
                 <DialogDescription className="text-base">
                   {selectedAnswer?.name} - Score: {selectedAnswer?.score || 0}
-                  /100
                 </DialogDescription>
               </DialogHeader>
 
