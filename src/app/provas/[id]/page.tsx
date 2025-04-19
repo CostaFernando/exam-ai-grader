@@ -47,11 +47,13 @@ import { examsTable, examAnswersTable, type examStatusEnum } from "@/db/schema";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { openFileFromReference, cleanupBlobUrls } from "@/lib/indexedDB";
-import { gradeAnswerSheet } from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
 import {
   gradeMultipleAnswerSheets,
   type GradeResult,
 } from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
+
+// Import the GradingOverlay component at the top of the file
+import { GradingOverlay } from "@/app/provas/[id]/_components/grading-overlay";
 
 type Exam = {
   id: number;
@@ -92,6 +94,7 @@ export default function ExamDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const [isGrading, setIsGrading] = useState(false);
 
   // Function to handle tab changes
   const handleTabChange = (value: string) => {
@@ -238,7 +241,7 @@ export default function ExamDetailsPage() {
   };
 
   const gradeAnswers = useCallback(
-    async (forceRegrade: boolean = false) => {
+    async (forceRegrade = false) => {
       if (!exam || exam.examAnswers.length === 0) return;
       const answersToGrade = forceRegrade
         ? exam.examAnswers
@@ -248,56 +251,81 @@ export default function ExamDetailsPage() {
         return;
       }
 
-      // load exam PDF
-      const examFileObject = await getFileFromReference(exam.url!);
-      if (!examFileObject) throw new Error("Could not retrieve exam file");
+      // Set grading state to true
+      setIsGrading(true);
 
-      // load all answer sheet Files
-      const answersWithFiles = await Promise.all(
-        answersToGrade.map(async (ans) => {
-          const file = await getFileFromReference(ans.answerSheetUrl!);
-          return { id: ans.id, file: file! };
-        })
-      );
+      try {
+        // load exam PDF
+        const examFileObject = await getFileFromReference(exam.url!);
+        if (!examFileObject) throw new Error("Could not retrieve exam file");
 
-      // call server-action
-      const results: GradeResult[] = await gradeMultipleAnswerSheets(
-        examFileObject,
-        answersWithFiles,
-        exam.gradingRubric ?? "",
-        exam.answerKey ?? ""
-      );
+        // load all answer sheet Files
+        const answersWithFiles = await Promise.all(
+          answersToGrade.map(async (ans) => {
+            const file = await getFileFromReference(ans.answerSheetUrl!);
+            return { id: ans.id, file: file! };
+          })
+        );
 
-      // update DB + state
-      let successful = 0;
-      for (const res of results) {
-        if (res.score != null && db) {
-          await db
-            .update(examAnswersTable)
-            .set({
-              score: res.score,
-              feedback: res.feedback,
-              updatedAt: new Date(),
-            })
-            .where(eq(examAnswersTable.id, res.id));
-          successful++;
+        // call server-action
+        const results: GradeResult[] = await gradeMultipleAnswerSheets(
+          examFileObject,
+          answersWithFiles,
+          exam.gradingRubric ?? "",
+          exam.answerKey ?? ""
+        );
+
+        // update DB + state
+        let successful = 0;
+        for (const res of results) {
+          if (res.score != null && db) {
+            await db
+              .update(examAnswersTable)
+              .set({
+                score: res.score,
+                feedback: res.feedback,
+                updatedAt: new Date(),
+              })
+              .where(eq(examAnswersTable.id, res.id));
+            successful++;
+          }
         }
-      }
 
-      // refresh state from DB
-      fetchExam();
+        // refresh state from DB
+        fetchExam();
 
-      toast.success(
-        `Successfully ${
-          forceRegrade ? "regraded" : "graded"
-        } ${successful} answer sheets!`
-      );
-      if (successful > 0) {
-        router.push(`/results?examId=${examId}`);
+        toast.success(
+          `Successfully ${
+            forceRegrade ? "regraded" : "graded"
+          } ${successful} answer sheets!`
+        );
+        if (successful > 0) {
+          router.push(`/results?examId=${examId}`);
+        }
+      } catch (error) {
+        console.error("Error during grading:", error);
+        toast.error("An error occurred during grading. Please try again.");
+      } finally {
+        // Set grading state back to false
+        setIsGrading(false);
       }
     },
     [exam, db, examId, fetchExam, router]
   );
+
+  // Add useEffect for beforeunload event to prevent navigation during grading
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isGrading) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isGrading]);
 
   // Helper function to get a File object from an IndexedDB reference
   async function getFileFromReference(fileRef: string): Promise<File | null> {
@@ -861,6 +889,7 @@ export default function ExamDetailsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      {isGrading && <GradingOverlay />}
     </div>
   );
 }
