@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export function GradingOverlay() {
   const [progress, setProgress] = useState(0);
@@ -125,6 +125,7 @@ export function GradingOverlay() {
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-md">
+          <DialogTitle>Grading in Progress</DialogTitle>
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-3">
               <AlertCircle className="h-6 w-6 text-destructive" />
