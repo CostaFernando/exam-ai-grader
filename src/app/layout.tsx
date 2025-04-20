@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "AI Test Grading Assistant",
+  title: "AI Grader",
   description: "Automate grading of discursive questions with AI assistance",
 };
 

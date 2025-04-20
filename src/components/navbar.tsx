@@ -10,7 +10,14 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { FileText, BarChart2, Settings, Menu } from "lucide-react";
+import {
+  FileText,
+  BarChart2,
+  Settings,
+  Menu,
+  ClipboardCheck,
+  Bot,
+} from "lucide-react";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +51,8 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex items-center justify-between h-16">
         <Link href="/" className="font-bold text-xl flex items-center gap-2">
-          <FileText className="h-6 w-6" />
+          <Bot className="h-6 w-6" />
+          <ClipboardCheck className="h-6 w-6" />
           <span>AI Grader</span>
         </Link>
 
