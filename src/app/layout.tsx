@@ -1,43 +1,49 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type React from "react";
 import "./globals.css";
+import { Inter, Roboto_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
+import { PostHogProvider } from "@/components/post-hog-provider";
+import type { Metadata } from "next";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const roboto_mono = Roboto_Mono({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-roboto-mono",
 });
 
 export const metadata: Metadata = {
-  title: "Estudantes | Jovens Gênios",
-  description: "Plataforma dos estudantes da Jovens Gênios",
+  title: "AI Grader",
+  description: "Automatize a correção de provas com assistência de IA.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body
-        className={` ${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+      <body className={`${inter.variable} ${roboto_mono.variable} antialiased`}>
+        <PostHogProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            <main>{children}</main>
+            <Toaster />
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
