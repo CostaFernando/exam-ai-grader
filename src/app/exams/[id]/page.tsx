@@ -108,7 +108,7 @@ export default function ExamDetailsPage() {
         setDb(database);
       } catch (err) {
         console.error("Failed to initialize database:", err);
-        setError("Failed to connect to database");
+        setError("Falha ao conectar ao banco de dados");
         setLoading(false);
       }
     }
@@ -126,13 +126,13 @@ export default function ExamDetailsPage() {
       });
 
       if (!result) {
-        setError("Exam not found");
+        setError("Prova não encontrada");
       } else {
         setExam(result);
       }
     } catch (err) {
       console.error("Error fetching exam:", err);
-      setError("Failed to load exam data");
+      setError("Falha ao carregar dados da prova");
     } finally {
       setLoading(false);
     }
@@ -154,7 +154,7 @@ export default function ExamDetailsPage() {
       await openFileFromReference(exam.url);
     } catch (error) {
       console.error("Error opening file:", error);
-      toast.error("Failed to open file");
+      toast.error("Falha ao abrir o arquivo");
     } finally {
       setDownloadLoading(false);
     }
@@ -168,7 +168,7 @@ export default function ExamDetailsPage() {
       await openFileFromReference(answer.answerSheetUrl);
     } catch (error) {
       console.error("Error opening file:", error);
-      toast.error("Failed to open file");
+      toast.error("Falha ao abrir o arquivo");
     } finally {
       setDownloadLoading(false);
     }
@@ -177,7 +177,9 @@ export default function ExamDetailsPage() {
   const handleDeleteAnswerSheet = async (answerId: number) => {
     if (!db) return;
 
-    if (!window.confirm("Are you sure you want to delete this answer sheet?")) {
+    if (
+      !window.confirm("Tem certeza que deseja excluir esta folha de resposta?")
+    ) {
       return;
     }
 
@@ -191,10 +193,10 @@ export default function ExamDetailsPage() {
         examAnswers: exam!.examAnswers.filter((a) => a.id !== answerId),
       });
 
-      toast.success("Answer sheet deleted successfully");
+      toast.success("Folha de resposta excluída com sucesso");
     } catch (error) {
       console.error("Error deleting answer sheet:", error);
-      toast.error("Failed to delete answer sheet");
+      toast.error("Falha ao excluir a folha de resposta");
     }
   };
 
@@ -207,11 +209,11 @@ export default function ExamDetailsPage() {
   const formatStatus = (status: string) => {
     switch (status) {
       case "IN_PROGRESS":
-        return "Active";
+        return "Ativo";
       case "COMPLETED":
-        return "Completed";
+        return "Concluído";
       case "ARCHIVED":
-        return "Archived";
+        return "Arquivado";
       default:
         return status;
     }
@@ -237,7 +239,7 @@ export default function ExamDetailsPage() {
         ? exam.examAnswers
         : exam.examAnswers.filter((a) => !a.score || a.score === 0);
       if (answersToGrade.length === 0) {
-        toast.success("All answer sheets are already graded!");
+        toast.success("Todas as folhas de resposta já foram corrigidas!");
         return;
       }
 
@@ -279,16 +281,18 @@ export default function ExamDetailsPage() {
         fetchExam();
 
         toast.success(
-          `Successfully ${
-            forceRegrade ? "regraded" : "graded"
-          } ${successful} answer sheets!`
+          `Corrigido${
+            forceRegrade ? " novamente" : ""
+          } com sucesso ${successful} folhas de resposta!`
         );
         if (successful > 0) {
           router.push(`/results?examId=${examId}`);
         }
       } catch (error) {
         console.error("Error during grading:", error);
-        toast.error("An error occurred during grading. Please try again.");
+        toast.error(
+          "Ocorreu um erro durante a correção. Por favor, tente novamente."
+        );
       } finally {
         setIsGrading(false);
       }
@@ -397,7 +401,7 @@ export default function ExamDetailsPage() {
     return (
       <div className="container mx-auto py-10 flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="h-12 w-12 animate-spin text-gray-400 mb-4" />
-        <p className="text-gray-500">Loading exam details...</p>
+        <p className="text-gray-500">Carregando detalhes da prova...</p>
       </div>
     );
   }
@@ -408,18 +412,18 @@ export default function ExamDetailsPage() {
         <div className="flex items-center gap-2 mb-6">
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Voltar
           </Button>
         </div>
         <Card className="max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>Error</CardTitle>
+            <CardTitle>Erro</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-red-500">{error}</p>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => router.back()}>Go Back</Button>
+            <Button onClick={() => router.back()}>Voltar</Button>
           </CardFooter>
         </Card>
       </div>
@@ -432,19 +436,19 @@ export default function ExamDetailsPage() {
         <div className="flex items-center gap-2 mb-6">
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Voltar
           </Button>
         </div>
         <Card className="max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>Exam Not Found</CardTitle>
+            <CardTitle>Prova Não Encontrada</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>The requested exam could not be found.</p>
+            <p>A prova solicitada não pôde ser encontrada.</p>
           </CardContent>
           <CardFooter>
             <Button onClick={() => router.push("/exams")}>
-              View All Exams
+              Ver Todas as Provas
             </Button>
           </CardFooter>
         </Card>
@@ -476,7 +480,7 @@ export default function ExamDetailsPage() {
       <div className="flex items-center gap-2 mb-6">
         <Button variant="outline" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          Voltar
         </Button>
         <h1 className="text-3xl font-bold">{exam.name}</h1>
         <Badge variant={getStatusVariant(exam.status)}>
@@ -488,7 +492,7 @@ export default function ExamDetailsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Answer Sheets Graded
+              Folhas de Resposta Corrigidas
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -496,18 +500,18 @@ export default function ExamDetailsPage() {
               {answersCount} / {answersCount}
             </div>
             <p className="text-sm text-gray-500">
-              {answersCount > 0 ? "In progress" : "No submissions"}
+              {answersCount > 0 ? "Em andamento" : "Nenhum envio"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Created</CardTitle>
+            <CardTitle className="text-sm font-medium">Criado em</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{createdDate}</div>
-            <p className="text-sm text-gray-500">Date created</p>
+            <p className="text-sm text-gray-500">Data de criação</p>
           </CardContent>
         </Card>
       </div>
@@ -516,7 +520,7 @@ export default function ExamDetailsPage() {
         <Link href={`/exams/${examId}/edit`}>
           <Button variant="outline">
             <Edit className="h-4 w-4 mr-2" />
-            Edit Test
+            Editar Prova
           </Button>
         </Link>
 
@@ -527,13 +531,13 @@ export default function ExamDetailsPage() {
             }}
           >
             <FileText className="h-4 w-4 mr-2" />
-            Grade Answers
+            Corrigir Respostas
           </Button>
         ) : (
           <Link href={`/answers/upload?examId=${examId}`}>
             <Button>
               <Upload className="h-4 w-4 mr-2" />
-              Upload Answer Sheets
+              Enviar Folhas de Resposta
             </Button>
           </Link>
         )}
@@ -549,40 +553,40 @@ export default function ExamDetailsPage() {
             ) : (
               <Download className="h-4 w-4 mr-2" />
             )}
-            Download Test PDF
+            Baixar PDF da Prova
           </Button>
         )}
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="mb-4">
-          <TabsTrigger value="details">Test Details</TabsTrigger>
-          <TabsTrigger value="rubric">Grading Rubric</TabsTrigger>
-          <TabsTrigger value="answerKey">Answer Key</TabsTrigger>
-          <TabsTrigger value="answerSheets">Answer Sheets</TabsTrigger>
-          <TabsTrigger value="results">Results</TabsTrigger>
+          <TabsTrigger value="details">Detalhes da Prova</TabsTrigger>
+          <TabsTrigger value="rubric">Critérios de Avaliação</TabsTrigger>
+          <TabsTrigger value="answerKey">Gabarito</TabsTrigger>
+          <TabsTrigger value="answerSheets">Folhas de Resposta</TabsTrigger>
+          <TabsTrigger value="results">Resultados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details">
           <Card>
             <CardHeader>
-              <CardTitle>Test Information</CardTitle>
-              <CardDescription>Details about this test</CardDescription>
+              <CardTitle>Informações da Prova</CardTitle>
+              <CardDescription>Detalhes sobre esta prova</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium">Description</h3>
+                  <h3 className="font-medium">Descrição</h3>
                   <p className="text-gray-600">
-                    {exam.description || "No description provided"}
+                    {exam.description || "Nenhuma descrição fornecida"}
                   </p>
                 </div>
                 {exam?.url && (
                   <div>
-                    <h3 className="font-medium">Test PDF</h3>
+                    <h3 className="font-medium">PDF da Prova</h3>
                     <div className="flex items-center mt-2">
                       <FileText className="h-6 w-6 text-gray-400 mr-2" />
-                      <span className="text-sm">View PDF</span>
+                      <span className="text-sm">Ver PDF</span>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -607,9 +611,9 @@ export default function ExamDetailsPage() {
         <TabsContent value="rubric">
           <Card>
             <CardHeader>
-              <CardTitle>Grading Rubric</CardTitle>
+              <CardTitle>Critérios de Avaliação</CardTitle>
               <CardDescription>
-                Criteria used for grading answer sheets
+                Critérios usados para corrigir as folhas de resposta
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -620,7 +624,7 @@ export default function ExamDetailsPage() {
               ) : (
                 <div className="text-center py-6">
                   <p className="text-gray-500">
-                    No grading rubric has been set for this exam.
+                    Nenhum critério de avaliação foi definido para esta prova.
                   </p>
                 </div>
               )}
@@ -629,7 +633,7 @@ export default function ExamDetailsPage() {
               <Link href={`/exams/${examId}/edit`}>
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Rubric
+                  Editar Critérios
                 </Button>
               </Link>
             </CardFooter>
@@ -639,8 +643,10 @@ export default function ExamDetailsPage() {
         <TabsContent value="answerKey">
           <Card>
             <CardHeader>
-              <CardTitle>Answer Key</CardTitle>
-              <CardDescription>Correct answers for this test</CardDescription>
+              <CardTitle>Gabarito</CardTitle>
+              <CardDescription>
+                Respostas corretas para esta prova
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {exam.answerKey ? (
@@ -650,7 +656,7 @@ export default function ExamDetailsPage() {
               ) : (
                 <div className="text-center py-6">
                   <p className="text-gray-500">
-                    No answer key has been set for this exam.
+                    Nenhum gabarito foi definido para esta prova.
                   </p>
                 </div>
               )}
@@ -659,7 +665,7 @@ export default function ExamDetailsPage() {
               <Link href={`/exams/${examId}/edit`}>
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Answer Key
+                  Editar Gabarito
                 </Button>
               </Link>
             </CardFooter>
@@ -670,9 +676,9 @@ export default function ExamDetailsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Answer Sheets</CardTitle>
+                <CardTitle>Folhas de Resposta</CardTitle>
                 <CardDescription>
-                  Manage individual answer sheets for this exam
+                  Gerenciar folhas de resposta individuais para esta prova
                 </CardDescription>
               </div>
               <div className="flex gap-2">
@@ -681,7 +687,7 @@ export default function ExamDetailsPage() {
                     <Link href={`/answers/upload?examId=${examId}`}>
                       <Button variant="outline">
                         <Upload className="h-4 w-4 mr-2" />
-                        Add More Sheets
+                        Adicionar Mais Folhas
                       </Button>
                     </Link>
                     {exam.examAnswers.some((a) => a.feedback) && (
@@ -690,19 +696,19 @@ export default function ExamDetailsPage() {
                         onClick={() => gradeAnswers(true)}
                       >
                         <FileText className="h-4 w-4 mr-2" />
-                        Regrade All
+                        Corrigir Tudo Novamente
                       </Button>
                     )}
                     <Button onClick={() => gradeAnswers(false)}>
                       <FileText className="h-4 w-4 mr-2" />
-                      Grade Answers
+                      Corrigir Respostas
                     </Button>
                   </>
                 ) : (
                   <Link href={`/answers/upload?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Answer Sheets
+                      Enviar Folhas de Resposta
                     </Button>
                   </Link>
                 )}
@@ -714,11 +720,11 @@ export default function ExamDetailsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Student Name</TableHead>
-                        <TableHead>Uploaded</TableHead>
-                        <TableHead>Score</TableHead>
+                        <TableHead>Nome do Aluno</TableHead>
+                        <TableHead>Enviado em</TableHead>
+                        <TableHead>Nota</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -741,7 +747,7 @@ export default function ExamDetailsPage() {
                                   answer.feedback ? "secondary" : "default"
                                 }
                               >
-                                {answer.feedback ? "Graded" : "Processing"}
+                                {answer.feedback ? "Corrigido" : "Processando"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -768,7 +774,7 @@ export default function ExamDetailsPage() {
                                       }}
                                     >
                                       <FileText className="h-4 w-4 mr-2" />
-                                      Regrade
+                                      Corrigir Novamente
                                     </DropdownMenuItem>
                                   )}
                                   {answer.answerSheetUrl && (
@@ -778,7 +784,7 @@ export default function ExamDetailsPage() {
                                       }
                                     >
                                       <Eye className="h-4 w-4 mr-2" />
-                                      View Sheet
+                                      Ver Folha
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem
@@ -787,7 +793,9 @@ export default function ExamDetailsPage() {
                                     }
                                   >
                                     <Trash2 className="h-4 w-4 mr-2 text-red-500" />
-                                    <span className="text-red-500">Delete</span>
+                                    <span className="text-red-500">
+                                      Excluir
+                                    </span>
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -801,12 +809,12 @@ export default function ExamDetailsPage() {
               ) : (
                 <div className="text-center py-10">
                   <p className="text-gray-500 mb-4">
-                    No answer sheets available yet
+                    Nenhuma folha de resposta disponível ainda
                   </p>
                   <Link href={`/answers/upload?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Answer Sheets
+                      Enviar Folhas de Resposta
                     </Button>
                   </Link>
                 </div>
@@ -818,9 +826,9 @@ export default function ExamDetailsPage() {
         <TabsContent value="results">
           <Card>
             <CardHeader>
-              <CardTitle>Test Results</CardTitle>
+              <CardTitle>Resultados da Prova</CardTitle>
               <CardDescription>
-                Overview of answer sheet performance
+                Visão geral do desempenho das folhas de resposta
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -828,19 +836,19 @@ export default function ExamDetailsPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 rounded-lg">
-                      <p className="text-sm text-gray-500">Average Score</p>
+                      <p className="text-sm text-gray-500">Nota Média</p>
                       <p className="text-2xl font-bold">
                         {averageScore.toFixed(1)}
                       </p>
                     </div>
                     <div className="p-4 rounded-lg">
-                      <p className="text-sm text-gray-500">Highest Score</p>
+                      <p className="text-sm text-gray-500">Maior Nota</p>
                       <p className="text-2xl font-bold">
                         {highestScore.toFixed(1)}
                       </p>
                     </div>
                     <div className="p-4 rounded-lg">
-                      <p className="text-sm text-gray-500">Lowest Score</p>
+                      <p className="text-sm text-gray-500">Menor Nota</p>
                       <p className="text-2xl font-bold">
                         {lowestScore.toFixed(1)}
                       </p>
@@ -848,16 +856,20 @@ export default function ExamDetailsPage() {
                   </div>
 
                   <Link href={`/results?examId=${examId}`}>
-                    <Button className="w-full">View Detailed Results</Button>
+                    <Button className="w-full">
+                      Ver Resultados Detalhados
+                    </Button>
                   </Link>
                 </div>
               ) : (
                 <div className="text-center py-10">
-                  <p className="text-gray-500 mb-4">No results available yet</p>
+                  <p className="text-gray-500 mb-4">
+                    Nenhum resultado disponível ainda
+                  </p>
                   <Link href={`/answers/upload?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Answer Sheets
+                      Enviar Folhas de Resposta
                     </Button>
                   </Link>
                 </div>

@@ -47,13 +47,13 @@ export function GradingOverlay() {
 
   const getStatusMessage = () => {
     if (progress < 25) {
-      return "Analyzing answer sheets...";
+      return "Analisando folhas de resposta...";
     } else if (progress < 50) {
-      return "Comparing with answer key...";
+      return "Comparando com o gabarito...";
     } else if (progress < 75) {
-      return "Evaluating responses...";
+      return "Avaliando respostas...";
     } else {
-      return "Finalizing grades...";
+      return "Finalizando notas...";
     }
   };
 
@@ -98,7 +98,7 @@ export function GradingOverlay() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-bold">Grading in Progress</h3>
+              <h3 className="text-xl font-bold">Correção em Andamento</h3>
               <p className="text-muted-foreground">{getStatusMessage()}</p>
             </div>
 
@@ -106,7 +106,7 @@ export function GradingOverlay() {
               <Progress value={progress} className="h-2" />
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{Math.round(progress)}%</span>
-                <span>Time remaining: {formatTimeRemaining()}</span>
+                <span>Tempo restante: {formatTimeRemaining()}</span>
               </div>
             </div>
 
@@ -114,8 +114,8 @@ export function GradingOverlay() {
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-left">
-                  Grading can take up to 2 minutes. Please don't close this
-                  window or navigate away during the process.
+                  A correção pode levar até 2 minutos. Por favor, não feche esta
+                  janela ou navegue para outra página durante o processo.
                 </p>
               </div>
             </div>
@@ -125,29 +125,29 @@ export function GradingOverlay() {
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-md">
-          <DialogTitle>Grading in Progress</DialogTitle>
+          <DialogTitle>Correção em Andamento</DialogTitle>
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-3">
               <AlertCircle className="h-6 w-6 text-destructive" />
-              <h3 className="text-lg font-semibold">Grading in Progress</h3>
+              <h3 className="text-lg font-semibold">Correção em Andamento</h3>
             </div>
             <p>
-              Grading is still in progress. Leaving this page will cancel the
-              grading process and your progress will be lost.
+              A correção ainda está em andamento. Sair desta página cancelará o
+              processo de correção e seu progresso será perdido.
             </p>
-            <p className="font-medium">Are you sure you want to leave?</p>
+            <p className="font-medium">Tem certeza que deseja sair?</p>
             <div className="flex justify-end gap-2 pt-2">
               <button
                 className="px-4 py-2 rounded-md bg-muted hover:bg-muted/80 transition-colors"
                 onClick={() => setShowDialog(false)}
               >
-                Stay on Page
+                Permanecer na Página
               </button>
               <button
                 className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
                 onClick={() => (window.location.href = "/exams")}
               >
-                Leave Anyway
+                Sair Mesmo Assim
               </button>
             </div>
           </div>
