@@ -34,6 +34,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { openFileFromReference } from "@/lib/indexedDB";
+import { toast } from "sonner";
 
 type Exam = {
   id: number;
@@ -75,6 +77,7 @@ export default function ResultsPage() {
   const [error, setError] = useState("");
   const [averageScore, setAverageScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<ExamAnswer | null>(null);
+  const [viewingSheetLoading, setViewingSheetLoading] = useState(false);
 
   useEffect(() => {
     async function fetchExams() {
@@ -186,6 +189,20 @@ export default function ResultsPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleViewAnswerSheet = async (answerSheetUrl: string | undefined) => {
+    if (!answerSheetUrl) return;
+
+    try {
+      setViewingSheetLoading(true);
+      await openFileFromReference(answerSheetUrl);
+    } catch (error) {
+      console.error("Error opening file:", error);
+      toast.error("Failed to open file");
+    } finally {
+      setViewingSheetLoading(false);
+    }
   };
 
   return (
@@ -429,16 +446,18 @@ export default function ResultsPage() {
                 <div className="mt-6">
                   <Button
                     variant="outline"
-                    asChild
+                    onClick={() =>
+                      handleViewAnswerSheet(selectedAnswer.answerSheetUrl)
+                    }
+                    disabled={viewingSheetLoading}
                     className="w-full text-base py-5"
                   >
-                    <a
-                      href={selectedAnswer.answerSheetUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View Original Answer Sheet
-                    </a>
+                    {viewingSheetLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <FileText className="h-4 w-4 mr-2" />
+                    )}
+                    View Original Answer Sheet
                   </Button>
                 </div>
               )}
