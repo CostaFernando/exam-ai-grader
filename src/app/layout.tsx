@@ -1,57 +1,43 @@
-import type React from "react";
-import "./globals.css";
-import { Inter, Roboto_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
-import Navbar from "@/components/navbar";
-import { Toaster } from "@/components/ui/sonner";
-import { PostHogProvider } from "@/components/post-hog-provider";
 import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
 });
 
-const roboto_mono = Roboto_Mono({
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  display: "swap",
-  variable: "--font-roboto-mono",
 });
 
 export const metadata: Metadata = {
-  title: "AI Grader",
-  description: "Automatize a correção de provas com assistência de IA.",
-  openGraph: {
-    title: "AI Grader",
-    description: "Automatize a correção de provas com assistência de IA.",
-    url: "https://exam-ai-grader.vercel.app",
-    siteName: "AI Grader",
-    locale: "pt-BR",
-    type: "website",
-  },
+  title: "Estudantes | Jovens Gênios",
+  description: "Plataforma dos estudantes da Jovens Gênios",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${inter.variable} ${roboto_mono.variable} antialiased`}>
-        <PostHogProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Navbar />
-            <main>{children}</main>
-            <Toaster />
-          </ThemeProvider>
-        </PostHogProvider>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body
+        className={` ${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
