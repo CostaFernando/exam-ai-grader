@@ -358,7 +358,7 @@ export default function EditExamPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="pt-6 flex justify-between">
             <Button
               variant="outline"
               onClick={() => router.back()}

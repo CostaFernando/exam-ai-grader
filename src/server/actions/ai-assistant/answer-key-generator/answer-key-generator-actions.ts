@@ -3,12 +3,13 @@
 import { generateText } from "ai";
 import { getAIProvider, Provider, ModelName } from "@/lib/ai-sdk";
 
-export async function generateAnswerKey(
-  assessmentFile: File,
-  provider: Provider = "google",
-  modelName: ModelName = "gemini-2.0-flash"
-): Promise<string> {
-  const system = `Você é um professor especialista em avaliações. Você receberá um arquivo com as questões de uma prova e, baseado nisso, escreverá o gabarito com solução para cada questão.`;
+export async function generateAnswerKey(assessmentFile: File): Promise<string> {
+  const provider: Provider = (process.env.LLM_PROVIDER as Provider) ?? "google";
+  const modelName: ModelName = process.env.LLM_MODEL ?? "gemini-2.0-flash";
+
+  const system = `Você é um professor especialista em avaliações. Você receberá um arquivo com as questões de uma prova e, baseado nisso, escreverá o gabarito com solução para cada questão.
+  
+  Escreva diretamente, sem preâmbulos, o gabarito com a solução para cada questão.`;
 
   const aiProvider = getAIProvider(provider);
 

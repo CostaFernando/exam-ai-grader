@@ -8,13 +8,15 @@ export async function gradeAnswerSheet(
   assessmentFile: File,
   answerSheet: File,
   gradingRubric: string,
-  answerKey: string,
-  provider: Provider = "openai",
-  modelName: ModelName = "o4-mini"
+  answerKey: string
 ): Promise<{
   score: number;
   feedback: string;
 }> {
+  const provider: Provider = (process.env.LLM_PROVIDER as Provider) ?? "google";
+  const modelName: ModelName =
+    process.env.LLM_MODEL ?? "gemini-2.5-flash-preview-04-17";
+
   const system = `Você é um avaliador de exams especializado, justo e rigoroso. Você fornece correções detalhadas, atribuindo notas precisas com base em critérios claros e dando feedback construtivo para ajudar os estudantes a entenderem seus erros e melhorarem continuamente.
 
 Você receberá as questões da prova, as rubricas (critérios) de avaliação, o gabarito e as respostas do estudante.
@@ -28,7 +30,7 @@ Diretrizes a serem seguidas:
 - Seu feedback deve ser falando diretamente para o aluno ler e detalhado para o aluno entender, principalmente, o que ele errou. Deve ser rigoroso, quando necessário, mas deve ajudar o estudante a entender seus erros.
 - Seu feedback deve conter a nota final da questão, a nota por critério e a nota por alternativa (se houver).
 - Você deve dar sua nota para cada critério ou alternativa da questão. A nota final deve ser a soma das notas em cada alternativa ou critério da questão.
-- Seja rigoroso na sua correção. Se o estudante cometer erro crítico em algum critério de correção, pode zerar a nota do critério.`;
+- Preste particular atenção a imagens e diagramas nas respostas do estudante. Preste atenção nos detalhes.`;
 
   const aiProvider = getAIProvider(provider);
 
@@ -125,9 +127,7 @@ export async function gradeMultipleAnswerSheets(
   examFile: File,
   answers: { id: number; file: File }[],
   gradingRubric: string,
-  answerKey: string,
-  provider: Provider = "openai",
-  modelName: ModelName = "o4-mini"
+  answerKey: string
 ): Promise<GradeResult[]> {
   const results = await Promise.all(
     answers.map(async ({ id, file }) => {
@@ -136,9 +136,7 @@ export async function gradeMultipleAnswerSheets(
           examFile,
           file,
           gradingRubric,
-          answerKey,
-          provider,
-          modelName
+          answerKey
         );
         return { id, score, feedback };
       } catch (err: any) {
