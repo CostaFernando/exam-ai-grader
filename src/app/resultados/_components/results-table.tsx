@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Search, Loader2 } from "lucide-react";
 import { initializeDatabase } from "@/db";
 import { eq } from "drizzle-orm";
-import { examsTable, examAnswersTable } from "@/db/schema";
+import { examAnswersTable } from "@/db/schema";
 import {
   Dialog,
   DialogContent,

@@ -38,38 +38,21 @@ import {
   BarChart,
 } from "lucide-react";
 import { initializeDatabase, type DbInstance } from "@/db";
-import { type examStatusEnum, examsTable } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { examsTable, examAnswersTable } from "@/db/schema";
+import { eq, InferSelectModel } from "drizzle-orm";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 
-type Exam = {
-  id: number;
-  name: string;
-  description: string | null;
-  status: (typeof examStatusEnum.enumValues)[number];
-  gradingRubric: string | null;
-  answerKey: string | null;
-  url: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  examAnswers: ExamAnswer[];
-};
+type Exam = InferSelectModel<typeof examsTable>;
+type ExamAnswer = InferSelectModel<typeof examAnswersTable>;
 
-type ExamAnswer = {
-  id: number;
-  examId: number;
-  name: string;
-  answerSheetUrl: string | null;
-  score: number | null;
-  feedback: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+type ExamWithAnswers = Exam & {
+  examAnswers: ExamAnswer[];
 };
 
 export default function ExamsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [exams, setExams] = useState<Exam[]>([]);
+  const [exams, setExams] = useState<ExamWithAnswers[]>([]);
   const [db, setDb] = useState<DbInstance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

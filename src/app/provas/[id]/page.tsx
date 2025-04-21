@@ -232,6 +232,87 @@ export default function ExamDetailsPage() {
     }
   };
 
+  const parseFileReference = useCallback(
+    (fileRef: string): { id: string; name: string; type: string } | null => {
+      try {
+        if (!fileRef.startsWith("idb-file://")) {
+          return null;
+        }
+
+        const encodedInfo = fileRef.substring("idb-file://".length);
+        const fileInfo = JSON.parse(atob(encodedInfo));
+        return fileInfo;
+      } catch (error) {
+        console.error("Error parsing file reference:", error);
+        return null;
+      }
+    },
+    []
+  );
+
+  const getFileById = useCallback(
+    async (id: string | number): Promise<File | null> => {
+      return new Promise<File | null>((resolve, reject) => {
+        const request = indexedDB.open("exams_ai_grader", 1);
+
+        request.onerror = () => {
+          reject("IndexedDB error");
+        };
+
+        request.onsuccess = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result;
+          const transaction = db.transaction(["files"], "readonly");
+          const store = transaction.objectStore("files");
+
+          let keyToUse = id;
+          if (typeof id === "string" && !isNaN(Number(id))) {
+            keyToUse = Number(id);
+          }
+
+          const getRequest = store.get(keyToUse);
+
+          getRequest.onsuccess = (event) => {
+            const result = (event.target as IDBRequest).result;
+            if (result && result.data instanceof File) {
+              resolve(result.data);
+            } else if (result && result.data) {
+              resolve(result.data);
+            } else {
+              resolve(null);
+            }
+          };
+
+          getRequest.onerror = () => {
+            reject("Error retrieving file from IndexedDB");
+          };
+        };
+      });
+    },
+    []
+  );
+
+  const getFileFromReference = useCallback(
+    async (fileRef: string): Promise<File | null> => {
+      if (!fileRef.startsWith("idb-file://")) {
+        return null;
+      }
+
+      try {
+        const fileInfo = parseFileReference(fileRef);
+        if (!fileInfo) {
+          return null;
+        }
+
+        const file = await getFileById(fileInfo.id);
+        return file;
+      } catch (error) {
+        console.error("Error retrieving file:", error);
+        return null;
+      }
+    },
+    [parseFileReference, getFileById]
+  );
+
   const gradeAnswers = useCallback(
     async (forceRegrade = false) => {
       if (!exam || exam.examAnswers.length === 0) return;
@@ -297,7 +378,7 @@ export default function ExamDetailsPage() {
         setIsGrading(false);
       }
     },
-    [exam, db, examId, fetchExam, router]
+    [exam, db, examId, fetchExam, router, getFileFromReference]
   );
 
   useEffect(() => {
@@ -312,80 +393,6 @@ export default function ExamDetailsPage() {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [isGrading]);
-
-  async function getFileFromReference(fileRef: string): Promise<File | null> {
-    if (!fileRef.startsWith("idb-file://")) {
-      return null;
-    }
-
-    try {
-      const fileInfo = parseFileReference(fileRef);
-      if (!fileInfo) {
-        return null;
-      }
-
-      const file = await getFileById(fileInfo.id);
-      return file;
-    } catch (error) {
-      console.error("Error retrieving file:", error);
-      return null;
-    }
-  }
-
-  function parseFileReference(
-    fileRef: string
-  ): { id: string; name: string; type: string } | null {
-    try {
-      if (!fileRef.startsWith("idb-file://")) {
-        return null;
-      }
-
-      const encodedInfo = fileRef.substring("idb-file://".length);
-      const fileInfo = JSON.parse(atob(encodedInfo));
-      return fileInfo;
-    } catch (error) {
-      console.error("Error parsing file reference:", error);
-      return null;
-    }
-  }
-
-  async function getFileById(id: string | number): Promise<File | null> {
-    return new Promise<File | null>((resolve, reject) => {
-      const request = indexedDB.open("exams_ai_grader", 1);
-
-      request.onerror = () => {
-        reject("IndexedDB error");
-      };
-
-      request.onsuccess = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction(["files"], "readonly");
-        const store = transaction.objectStore("files");
-
-        let keyToUse = id;
-        if (typeof id === "string" && !isNaN(Number(id))) {
-          keyToUse = Number(id);
-        }
-
-        const getRequest = store.get(keyToUse);
-
-        getRequest.onsuccess = (event) => {
-          const result = (event.target as IDBRequest).result;
-          if (result && result.data instanceof File) {
-            resolve(result.data);
-          } else if (result && result.data) {
-            resolve(result.data);
-          } else {
-            resolve(null);
-          }
-        };
-
-        getRequest.onerror = () => {
-          reject("Error retrieving file from IndexedDB");
-        };
-      };
-    });
-  }
 
   useEffect(() => {
     if (tabParam === "answerSheets") {

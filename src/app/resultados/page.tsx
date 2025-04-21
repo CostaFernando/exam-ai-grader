@@ -37,11 +37,7 @@ import {
 import { openFileFromReference } from "@/lib/indexedDB";
 import { toast } from "sonner";
 
-type Exam = {
-  id: number;
-  name: string;
-  maxScore?: number;
-};
+type Exam = typeof examsTable.$inferSelect;
 
 type ExamAnswer = {
   id: number;
@@ -110,7 +106,7 @@ export default function ResultsPage() {
         const db = await initializeDatabase();
         const examId = Number(selectedExam);
 
-        const exam = await db.query.examsTable.findFirst({
+        await db.query.examsTable.findFirst({
           where: eq(examsTable.id, examId),
         });
 

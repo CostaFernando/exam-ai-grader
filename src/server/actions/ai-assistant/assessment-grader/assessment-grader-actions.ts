@@ -144,8 +144,14 @@ export async function gradeMultipleAnswerSheets(
           answerKey
         );
         return { id, score, feedback };
-      } catch (err: any) {
-        return { id, error: err?.message || "Grading failed" };
+      } catch (err: unknown) {
+        let errorMessage = "Grading failed";
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === "string") {
+          errorMessage = err;
+        }
+        return { id, error: errorMessage };
       }
     })
   );

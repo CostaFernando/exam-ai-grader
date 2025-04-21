@@ -25,7 +25,7 @@ import { FileUploader } from "@/components/file-uploader";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { initializeDatabase, type DbInstance } from "@/db";
-import { examAnswersTable } from "@/db/schema";
+import { examAnswersTable, examsTable } from "@/db/schema";
 import { toast } from "sonner";
 
 interface AnswerSheet {
@@ -34,6 +34,8 @@ interface AnswerSheet {
   file: File | null;
   fileUrl: string | null;
 }
+
+type Exam = typeof examsTable.$inferSelect;
 
 export default function UploadAnswersPage() {
   const router = useRouter();
@@ -50,7 +52,7 @@ export default function UploadAnswersPage() {
     },
   ]);
   const [db, setDb] = useState<DbInstance | null>(null);
-  const [exams, setExams] = useState<any[]>([]);
+  const [exams, setExams] = useState<Exam[]>([]);
 
   useEffect(() => {
     async function initializeDatabaseAndLoadExams() {
