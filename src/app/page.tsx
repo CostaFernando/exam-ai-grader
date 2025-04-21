@@ -41,9 +41,9 @@ export default function HomePage() {
               className="text-3xl px-4 md:text-4xl lg:text-5xl xl:text-6xl/none font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto"
             >
               <Highlight className="text-black dark:text-white">
-                Grade Tests Faster
+                Corrija Provas Mais Rápido
               </Highlight>{" "}
-              with AI Assistance
+              com Assistência de IA
             </motion.h1>
 
             <motion.p
@@ -55,8 +55,9 @@ export default function HomePage() {
               }}
               className="relative z-10 max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400 mx-auto"
             >
-              Automate the grading of discursive questions with AI. Save time,
-              ensure consistency, and provide better feedback to your students.
+              Automatize a correção de questões discursivas com IA. Economize
+              tempo, garanta consistência e forneça feedback melhor aos seus
+              alunos.
             </motion.p>
 
             <motion.div
@@ -73,7 +74,7 @@ export default function HomePage() {
                   size="lg"
                   className="px-8 transform transition-all duration-300 hover:-translate-y-0.5"
                 >
-                  Get Started
+                  Começar Agora
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -90,15 +91,15 @@ export default function HomePage() {
             >
               <div className="flex items-center space-x-1">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Fast & Accurate</span>
+                <span>Rápido e Preciso</span>
               </div>
               <div className="flex items-center space-x-1">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Detailed Feedback</span>
+                <span>Feedback Detalhado</span>
               </div>
               <div className="flex items-center space-x-1">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Easy to Use</span>
+                <span>Fácil de Usar</span>
               </div>
             </motion.div>
 
@@ -114,7 +115,7 @@ export default function HomePage() {
               <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700">
                 <iframe
                   src="https://www.youtube.com/embed/N-Z8eCYZod8"
-                  title="AI Test Grading Assistant Demo"
+                  title="Demonstração do Assistente de Correção de Provas com IA"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="absolute top-0 left-0 w-full h-full border-0"
@@ -131,14 +132,15 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">
-                Key Features
+                Principais Recursos
               </div>
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                Why Choose AI Test Grading?
+                Por que Escolher a Correção de Provas com IA?
               </h2>
               <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                Our AI-powered platform streamlines the grading process, saving
-                you time while providing consistent and detailed feedback.
+                Nossa plataforma com IA otimiza o processo de correção,
+                economizando seu tempo e fornecendo feedback consistente e
+                detalhado.
               </p>
             </div>
           </div>
@@ -152,15 +154,15 @@ export default function HomePage() {
                   <div className="rounded-full bg-gray-100 p-3 dark:bg-gray-800">
                     <Clock className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-bold">Save Time</h3>
+                  <h3 className="text-xl font-bold">Economize Tempo</h3>
                 </CardItem>
                 <CardItem
                   as="p"
                   translateZ="60"
                   className="text-center text-gray-500 dark:text-gray-400 text-sm mt-2"
                 >
-                  Reduce grading time by up to 70% with AI assistance, allowing
-                  you to focus on teaching.
+                  Reduza o tempo de correção em até 70%, permitindo que você se
+                  concentre no aprendizado.
                 </CardItem>
               </CardBody>
             </CardContainer>
@@ -174,15 +176,15 @@ export default function HomePage() {
                   <div className="rounded-full bg-gray-100 p-3 dark:bg-gray-800">
                     <BarChart2 className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-bold">Detailed Analytics</h3>
+                  <h3 className="text-xl font-bold">Análises Detalhadas</h3>
                 </CardItem>
                 <CardItem
                   as="p"
                   translateZ="60"
                   className="text-center text-gray-500 dark:text-gray-400 text-sm mt-2"
                 >
-                  Get insights into student performance with comprehensive
-                  analytics and reports.
+                  Obtenha insights sobre o desempenho dos alunos com análises e
+                  relatórios abrangentes.
                 </CardItem>
               </CardBody>
             </CardContainer>
@@ -196,15 +198,15 @@ export default function HomePage() {
                   <div className="rounded-full bg-gray-100 p-3 dark:bg-gray-800">
                     <Sparkles className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-bold">AI-Powered Feedback</h3>
+                  <h3 className="text-xl font-bold">Feedback com IA</h3>
                 </CardItem>
                 <CardItem
                   as="p"
                   translateZ="60"
                   className="text-center text-gray-500 dark:text-gray-400 text-sm mt-2"
                 >
-                  Provide consistent, detailed feedback to help students
-                  understand their mistakes and improve.
+                  Forneça feedback para ajudar os alunos a entenderem seus erros
+                  e melhorarem.
                 </CardItem>
               </CardBody>
             </CardContainer>
@@ -218,13 +220,13 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">
-                Simple Process
+                Processo Simples
               </div>
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                How It Works
+                Como Funciona
               </h2>
               <TextGenerateEffect
-                words="Our platform makes grading tests simple and efficient with just a few steps."
+                words="Nossa plataforma torna a correção de provas simples e eficiente em apenas alguns passos."
                 className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400"
               />
             </div>
@@ -235,9 +237,9 @@ export default function HomePage() {
                 <span className="text-xl font-bold">1</span>
               </div>
               <div className="h-1 w-full bg-gray-200 absolute top-6 left-1/2 hidden lg:block dark:bg-gray-800"></div>
-              <h3 className="text-xl font-bold mt-2">Upload Test</h3>
+              <h3 className="text-xl font-bold mt-2">Carregar Prova</h3>
               <TextGenerateEffect
-                words="Create a new test and upload your exam PDF."
+                words="Crie uma nova prova e carregue o PDF."
                 className="text-center text-gray-500 dark:text-gray-400"
               />
             </div>
@@ -246,9 +248,9 @@ export default function HomePage() {
                 <span className="text-xl font-bold">2</span>
               </div>
               <div className="h-1 w-full bg-gray-200 absolute top-6 left-1/2 hidden lg:block dark:bg-gray-800"></div>
-              <h3 className="text-xl font-bold mt-2">Add Answer Sheets</h3>
+              <h3 className="text-xl font-bold mt-2">Adicionar Respostas</h3>
               <TextGenerateEffect
-                words="Upload student answer sheets for grading."
+                words="Carregue as folhas de resposta dos alunos para correção."
                 className="text-center text-gray-500 dark:text-gray-400"
               />
             </div>
@@ -257,9 +259,9 @@ export default function HomePage() {
                 <span className="text-xl font-bold">3</span>
               </div>
               <div className="h-1 w-full bg-gray-200 absolute top-6 left-1/2 hidden lg:block dark:bg-gray-800"></div>
-              <h3 className="text-xl font-bold mt-2">AI Grading</h3>
+              <h3 className="text-xl font-bold mt-2">Correção com IA</h3>
               <TextGenerateEffect
-                words="Our AI grades the answers based on your rubric."
+                words="Nossa IA corrige as respostas com base na sua rubrica."
                 className="text-center text-gray-500 dark:text-gray-400"
               />
             </div>
@@ -267,9 +269,9 @@ export default function HomePage() {
               <div className="rounded-full bg-primary text-primary-foreground p-3 relative z-10">
                 <span className="text-xl font-bold">4</span>
               </div>
-              <h3 className="text-xl font-bold mt-2">View Results</h3>
+              <h3 className="text-xl font-bold mt-2">Ver Resultados</h3>
               <TextGenerateEffect
-                words="Review grades, feedback, and analytics."
+                words="Revise notas, feedback e análises."
                 className="text-center text-gray-500 dark:text-gray-400"
               />
             </div>
@@ -283,11 +285,12 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                Ready to Transform Your Grading Process?
+                Pronto para Transformar Seu Processo de Correção?
               </h2>
               <p className="max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Join educators who are saving time and providing better feedback
-                with our AI grading assistant.
+                Junte-se aos educadores que estão economizando tempo e
+                fornecendo feedback melhor com nosso assistente de correção com
+                IA.
               </p>
             </div>
             <motion.div
@@ -306,7 +309,7 @@ export default function HomePage() {
                   className="px-8 transform transition-all duration-300 hover:-translate-y-0.5"
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  Create Your First Test
+                  Crie Sua Primeira Prova
                 </Button>
               </Link>
             </motion.div>
