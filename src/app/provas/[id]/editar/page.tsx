@@ -169,7 +169,7 @@ export default function EditExamPage() {
         .where(eq(examsTable.id, examId));
 
       toast.success("Prova atualizada com sucesso!");
-      router.push(`/exams/${examId}`);
+      router.push(`/provas/${examId}`);
     } catch (err) {
       console.error("Error updating exam:", err);
       toast.error("Falha ao atualizar prova");
@@ -228,7 +228,7 @@ export default function EditExamPage() {
             <p>A prova solicitada não pôde ser encontrada.</p>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => router.push("/exams")}>
+            <Button onClick={() => router.push("/provas")}>
               Ver Todos os Testes
             </Button>
           </CardFooter>

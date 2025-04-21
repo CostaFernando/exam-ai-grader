@@ -52,7 +52,7 @@ import {
   type GradeResult,
 } from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
 
-import { GradingOverlay } from "@/app/exams/[id]/_components/grading-overlay";
+import { GradingOverlay } from "@/app/provas/[id]/_components/grading-overlay";
 
 type Exam = {
   id: number;
@@ -98,7 +98,7 @@ export default function ExamDetailsPage() {
   const handleTabChange = (value: string) => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("tab", value);
-    router.push(`/exams/${examId}?${newSearchParams.toString()}`);
+    router.push(`/provas/${examId}?${newSearchParams.toString()}`);
   };
 
   useEffect(() => {
@@ -286,7 +286,7 @@ export default function ExamDetailsPage() {
           } com sucesso ${successful} folhas de resposta!`
         );
         if (successful > 0) {
-          router.push(`/results?examId=${examId}`);
+          router.push(`/resultados?examId=${examId}`);
         }
       } catch (error) {
         console.error("Error during grading:", error);
@@ -447,7 +447,7 @@ export default function ExamDetailsPage() {
             <p>A prova solicitada não pôde ser encontrada.</p>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => router.push("/exams")}>
+            <Button onClick={() => router.push("/provas")}>
               Ver Todas as Provas
             </Button>
           </CardFooter>
@@ -517,7 +517,7 @@ export default function ExamDetailsPage() {
       </div>
 
       <div className="flex gap-4 mb-6">
-        <Link href={`/exams/${examId}/edit`}>
+        <Link href={`/provas/${examId}/editar`}>
           <Button variant="outline">
             <Edit className="h-4 w-4 mr-2" />
             Editar Prova
@@ -527,14 +527,14 @@ export default function ExamDetailsPage() {
         {answersCount > 0 ? (
           <Button
             onClick={() => {
-              router.push(`/exams/${examId}?tab=answerSheets`);
+              router.push(`/provas/${examId}?tab=answerSheets`);
             }}
           >
             <FileText className="h-4 w-4 mr-2" />
             Corrigir Respostas
           </Button>
         ) : (
-          <Link href={`/answers/upload?examId=${examId}`}>
+          <Link href={`/respostas/enviar?examId=${examId}`}>
             <Button>
               <Upload className="h-4 w-4 mr-2" />
               Enviar Folhas de Resposta
@@ -630,7 +630,7 @@ export default function ExamDetailsPage() {
               )}
             </CardContent>
             <CardFooter>
-              <Link href={`/exams/${examId}/edit`}>
+              <Link href={`/provas/${examId}/editar`}>
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
                   Editar Critérios
@@ -662,7 +662,7 @@ export default function ExamDetailsPage() {
               )}
             </CardContent>
             <CardFooter>
-              <Link href={`/exams/${examId}/edit`}>
+              <Link href={`/provas/${examId}/editar`}>
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
                   Editar Gabarito
@@ -684,7 +684,7 @@ export default function ExamDetailsPage() {
               <div className="flex gap-2">
                 {answersCount > 0 ? (
                   <>
-                    <Link href={`/answers/upload?examId=${examId}`}>
+                    <Link href={`/respostas/enviar?examId=${examId}`}>
                       <Button variant="outline">
                         <Upload className="h-4 w-4 mr-2" />
                         Adicionar Mais Folhas
@@ -705,7 +705,7 @@ export default function ExamDetailsPage() {
                     </Button>
                   </>
                 ) : (
-                  <Link href={`/answers/upload?examId=${examId}`}>
+                  <Link href={`/respostas/enviar?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
                       Enviar Folhas de Resposta
@@ -811,7 +811,7 @@ export default function ExamDetailsPage() {
                   <p className="text-gray-500 mb-4">
                     Nenhuma folha de resposta disponível ainda
                   </p>
-                  <Link href={`/answers/upload?examId=${examId}`}>
+                  <Link href={`/respostas/enviar?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
                       Enviar Folhas de Resposta
@@ -855,7 +855,7 @@ export default function ExamDetailsPage() {
                     </div>
                   </div>
 
-                  <Link href={`/results?examId=${examId}`}>
+                  <Link href={`/resultados?examId=${examId}`}>
                     <Button className="w-full">
                       Ver Resultados Detalhados
                     </Button>
@@ -866,7 +866,7 @@ export default function ExamDetailsPage() {
                   <p className="text-gray-500 mb-4">
                     Nenhum resultado disponível ainda
                   </p>
-                  <Link href={`/answers/upload?examId=${examId}`}>
+                  <Link href={`/respostas/enviar?examId=${examId}`}>
                     <Button>
                       <Upload className="h-4 w-4 mr-2" />
                       Enviar Folhas de Resposta

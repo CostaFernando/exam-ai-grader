@@ -25,12 +25,12 @@ export default function Navbar() {
   const navItems = [
     {
       name: "Provas",
-      href: "/exams",
+      href: "/provas",
       icon: <FileText className="h-4 w-4 mr-2" />,
     },
     {
       name: "Resultados",
-      href: "/results",
+      href: "/resultados",
       icon: <BarChart2 className="h-4 w-4 mr-2" />,
     },
   ];

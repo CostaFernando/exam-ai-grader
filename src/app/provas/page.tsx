@@ -77,7 +77,7 @@ export default function ExamsPage() {
   const router = useRouter();
 
   const gradeExam = (id: number) => {
-    router.push(`/exams/${id}?tab=answerSheets&grade=true`);
+    router.push(`/provas/${id}?tab=answerSheets&grade=true`);
   };
 
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function ExamsPage() {
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Provas</h1>
-        <Link href="/exams/new">
+        <Link href="/provas/criar">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Criar Nova Prova
@@ -223,7 +223,7 @@ export default function ExamsPage() {
                   : "Crie sua primeira prova para começar"}
               </p>
               {!searchTerm && (
-                <Link href="/exams/new">
+                <Link href="/provas/criar">
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Criar Nova Prova
@@ -274,13 +274,13 @@ export default function ExamsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <Link href={`/exams/${exam.id}`}>
+                              <Link href={`/provas/${exam.id}`}>
                                 <DropdownMenuItem>
                                   <Eye className="h-4 w-4 mr-2" />
                                   Ver Detalhes
                                 </DropdownMenuItem>
                               </Link>
-                              <Link href={`/exams/${exam.id}/edit`}>
+                              <Link href={`/provas/${exam.id}/editar`}>
                                 <DropdownMenuItem>
                                   <Edit className="h-4 w-4 mr-2" />
                                   Editar Prova
@@ -292,13 +292,15 @@ export default function ExamsPage() {
                                 <FileText className="h-4 w-4 mr-2" />
                                 Corrigir Respostas
                               </DropdownMenuItem>
-                              <Link href={`/answers/upload?examId=${exam.id}`}>
+                              <Link
+                                href={`/respostas/enviar?examId=${exam.id}`}
+                              >
                                 <DropdownMenuItem>
                                   <Plus className="h-4 w-4 mr-2" />
                                   Adicionar Folhas de Resposta
                                 </DropdownMenuItem>
                               </Link>
-                              <Link href={`/results?examId=${exam.id}`}>
+                              <Link href={`/resultados?examId=${exam.id}`}>
                                 <DropdownMenuItem>
                                   <BarChart className="h-4 w-4 mr-2" />
                                   Ver Resultados
