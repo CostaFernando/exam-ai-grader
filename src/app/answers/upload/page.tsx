@@ -175,7 +175,7 @@ export default function UploadAnswersPage() {
       setAnswerSheets(updatedSheets);
     } catch (error) {
       console.error("Error storing files:", error);
-      toast.error("Failed to upload files");
+      toast.error("Falha ao enviar arquivos");
     }
   };
 
@@ -194,7 +194,7 @@ export default function UploadAnswersPage() {
 
     const savedSheets = await Promise.all(
       answerSheets.map(async (sheet) => {
-        if (!sheet.fileUrl) throw new Error("File URL is missing");
+        if (!sheet.fileUrl) throw new Error("URL do arquivo está faltando");
 
         const result = await db
           .insert(examAnswersTable)
@@ -218,12 +218,14 @@ export default function UploadAnswersPage() {
 
     try {
       await saveAnswerSheetsToDb();
-      toast.success("Answer sheets uploaded successfully!");
+      toast.success("Folhas de resposta enviadas com sucesso!");
       router.push(`/exams/${selectedExam}`);
     } catch (error) {
       console.error("Error saving answer sheets:", error);
       const message =
-        error instanceof Error ? error.message : "Failed to save answer sheets";
+        error instanceof Error
+          ? error.message
+          : "Falha ao salvar folhas de resposta";
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -232,19 +234,19 @@ export default function UploadAnswersPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Upload Answer Sheets</h1>
+      <h1 className="text-3xl font-bold mb-6">Enviar Folhas de Resposta</h1>
 
       <Card className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Exam Answer Sheets</CardTitle>
+            <CardTitle>Folhas de Resposta da Prova</CardTitle>
             <CardDescription>
-              Upload PDF files containing answers for grading
+              Envie arquivos PDF contendo as respostas para correção
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="mt-6 space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="exam-select">Select Exam</Label>
+              <Label htmlFor="exam-select">Selecionar Prova</Label>
               <Select
                 key={selectedExam}
                 value={selectedExam}
@@ -253,7 +255,7 @@ export default function UploadAnswersPage() {
                 disabled={!!examIdParam}
               >
                 <SelectTrigger id="exam-select">
-                  <SelectValue placeholder="Select an exam" />
+                  <SelectValue placeholder="Selecione uma prova" />
                 </SelectTrigger>
                 <SelectContent>
                   {exams.map((exam) => (
@@ -267,7 +269,7 @@ export default function UploadAnswersPage() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Answer Sheets</Label>
+                <Label>Folhas de Resposta</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -275,7 +277,7 @@ export default function UploadAnswersPage() {
                   onClick={handleAddAnswerSheet}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  Add Answer Sheet
+                  Adicionar Folha de Resposta
                 </Button>
               </div>
 
@@ -293,7 +295,7 @@ export default function UploadAnswersPage() {
                         onChange={(e) =>
                           handleNameChange(sheet.id, e.target.value)
                         }
-                        placeholder="Enter name (or leave empty to use filename)"
+                        placeholder="Digite o nome (ou deixe em branco para usar o nome do arquivo)"
                       />
                       {answerSheets.length > 1 && (
                         <Button
@@ -320,13 +322,13 @@ export default function UploadAnswersPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="mt-6 flex justify-between">
             <Button
               variant="outline"
               onClick={() => router.back()}
               type="button"
             >
-              Cancel
+              Cancelar
             </Button>
             <Button
               type="submit"
@@ -340,10 +342,10 @@ export default function UploadAnswersPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing
+                  Processando
                 </>
               ) : (
-                "Upload Answer Sheets"
+                "Enviar Folhas de Resposta"
               )}
             </Button>
           </CardFooter>
