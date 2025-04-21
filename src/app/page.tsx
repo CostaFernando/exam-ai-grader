@@ -114,7 +114,7 @@ export default function HomePage() {
             >
               <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-300 dark:border-gray-700">
                 <iframe
-                  src="https://www.youtube.com/embed/N-Z8eCYZod8"
+                  src="https://www.youtube.com/embed/LI2flm_fNZA?si=T-I9Ce4gX7Lm0TFo"
                   title="Demonstração do Assistente de Correção de Provas com IA"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
