@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,16 +10,33 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { FileText, BarChart2, Menu, ClipboardCheck, Bot } from "lucide-react";
+import {
+  FileText,
+  BarChart2,
+  Menu,
+  ClipboardCheck,
+  Bot,
+  MessageSquare,
+} from "lucide-react";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { cn } from "@/lib/utils";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
 
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  const handleFeedbackClick = () => {
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.set("feedback-survey", "true");
+    const newUrl = `${pathname}?${currentParams.toString()}`;
+    router.push(newUrl);
+    setIsOpen(false);
   };
 
   const navItems = [
@@ -57,6 +74,10 @@ export default function Navbar() {
               </Button>
             </Link>
           ))}
+          <Button variant="ghost" size="sm" onClick={handleFeedbackClick}>
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Feedback
+          </Button>
           <Link
             href="https://github.com/CostaFernando/exam-ai-grader"
             target="_blank"
@@ -109,6 +130,14 @@ export default function Navbar() {
                       </Button>
                     </Link>
                   ))}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start hover:bg-accent"
+                    onClick={handleFeedbackClick}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Feedback
+                  </Button>
                 </div>
                 <div className="mt-auto p-6 border-t">
                   <Link
