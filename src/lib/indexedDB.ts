@@ -79,7 +79,7 @@ function createFileReference(
   type: string
 ): string {
   const fileInfo = { id: String(id), name, type };
-  const encodedInfo = btoa(JSON.stringify(fileInfo));
+  const encodedInfo = btoa(encodeURIComponent(JSON.stringify(fileInfo)));
   return `idb-file://${encodedInfo}`;
 }
 
@@ -92,7 +92,8 @@ function parseFileReference(
     }
 
     const encodedInfo = fileRef.substring("idb-file://".length);
-    const fileInfo = JSON.parse(atob(encodedInfo));
+    const decodedInfo = decodeURIComponent(atob(encodedInfo));
+    const fileInfo = JSON.parse(decodedInfo);
     return fileInfo;
   } catch (error) {
     console.error("Error parsing file reference:", error);
