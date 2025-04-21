@@ -56,7 +56,7 @@ export default function EditExamPage() {
         setDb(database);
       } catch (err) {
         console.error("Failed to initialize database:", err);
-        setError("Failed to connect to database");
+        setError("Falha ao conectar ao banco de dados");
         setIsLoading(false);
       }
     }
@@ -75,13 +75,13 @@ export default function EditExamPage() {
         });
 
         if (!result) {
-          setError("Exam not found");
+          setError("Prova não encontrada");
         } else {
           setExam(result);
         }
       } catch (err) {
         console.error("Error fetching exam:", err);
-        setError("Failed to load exam data");
+        setError("Falha ao carregar dados da prova");
       } finally {
         setIsLoading(false);
       }
@@ -107,13 +107,13 @@ export default function EditExamPage() {
       setExam({ ...exam, url: fileRef });
     } catch (error) {
       console.error("Error storing file:", error);
-      toast.error("Failed to upload file");
+      toast.error("Falha ao fazer upload do arquivo");
     }
   };
 
   const handleGenerateRubric = async () => {
     if (!selectedFile) {
-      toast.error("Please upload a test PDF first");
+      toast.error("Por favor, faça upload do PDF da prova primeiro");
       return;
     }
 
@@ -121,10 +121,10 @@ export default function EditExamPage() {
     try {
       const rubric = await generateAssessmentRubric(selectedFile);
       setExam({ ...exam!, gradingRubric: rubric });
-      toast.success("Grading rubric generated successfully!");
+      toast.success("Critérios de avaliação gerados com sucesso!");
     } catch (error) {
       console.error("Error generating rubric:", error);
-      toast.error("Failed to generate grading rubric");
+      toast.error("Falha ao gerar critérios de avaliação");
     } finally {
       setIsGeneratingRubric(false);
     }
@@ -132,7 +132,7 @@ export default function EditExamPage() {
 
   const handleGenerateAnswerKey = async () => {
     if (!selectedFile) {
-      toast.error("Please upload a test PDF first");
+      toast.error("Por favor, faça upload do PDF da prova primeiro");
       return;
     }
 
@@ -140,10 +140,10 @@ export default function EditExamPage() {
     try {
       const answerKeyText = await generateAnswerKey(selectedFile);
       setExam({ ...exam!, answerKey: answerKeyText });
-      toast.success("Answer key generated successfully!");
+      toast.success("Gabarito gerado com sucesso!");
     } catch (error) {
       console.error("Error generating answer key:", error);
-      toast.error("Failed to generate answer key");
+      toast.error("Falha ao gerar gabarito");
     } finally {
       setIsGeneratingAnswerKey(false);
     }
@@ -168,11 +168,11 @@ export default function EditExamPage() {
         })
         .where(eq(examsTable.id, examId));
 
-      toast.success("Test updated successfully!");
+      toast.success("Prova atualizada com sucesso!");
       router.push(`/exams/${examId}`);
     } catch (err) {
       console.error("Error updating exam:", err);
-      toast.error("Failed to update test");
+      toast.error("Falha ao atualizar prova");
     } finally {
       setIsSaving(false);
     }
@@ -182,7 +182,7 @@ export default function EditExamPage() {
     return (
       <div className="container mx-auto py-10 flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="h-12 w-12 animate-spin text-gray-400 mb-4" />
-        <p className="text-gray-500">Loading exam details...</p>
+        <p className="text-gray-500">Carregando detalhes da prova...</p>
       </div>
     );
   }
@@ -193,18 +193,18 @@ export default function EditExamPage() {
         <div className="flex items-center gap-2 mb-6">
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Voltar
           </Button>
         </div>
         <Card className="max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>Error</CardTitle>
+            <CardTitle>Erro</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-red-500">{error}</p>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => router.back()}>Go Back</Button>
+            <Button onClick={() => router.back()}>Voltar</Button>
           </CardFooter>
         </Card>
       </div>
@@ -217,19 +217,19 @@ export default function EditExamPage() {
         <div className="flex items-center gap-2 mb-6">
           <Button variant="outline" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Voltar
           </Button>
         </div>
         <Card className="max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>Exam Not Found</CardTitle>
+            <CardTitle>Prova Não Encontrada</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>The requested exam could not be found.</p>
+            <p>A prova solicitada não pôde ser encontrada.</p>
           </CardContent>
           <CardFooter>
             <Button onClick={() => router.push("/exams")}>
-              View All Exams
+              Ver Todos os Testes
             </Button>
           </CardFooter>
         </Card>
@@ -242,22 +242,24 @@ export default function EditExamPage() {
       <div className="flex items-center gap-2 mb-6">
         <Button variant="outline" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          Voltar
         </Button>
-        <h1 className="text-3xl font-bold">Edit Test</h1>
+        <h1 className="text-3xl font-bold">Editar Prova</h1>
       </div>
 
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Test Details</CardTitle>
-            <CardDescription>Update your test information</CardDescription>
+            <CardTitle>Detalhes da Prova</CardTitle>
+            <CardDescription>
+              Atualize as informações da sua prova
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="mt-6 space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="test-name">Test Name</Label>
+              <Label htmlFor="exam-name">Nome da Prova</Label>
               <Input
-                id="test-name"
+                id="exam-name"
                 value={exam.name}
                 onChange={(e) => setExam({ ...exam, name: e.target.value })}
                 required
@@ -265,7 +267,7 @@ export default function EditExamPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
                 value={exam.description || ""}
@@ -277,7 +279,7 @@ export default function EditExamPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Test PDF</Label>
+              <Label>PDF da Prova</Label>
               <FileUploader
                 accept=".pdf"
                 maxSize={10}
@@ -286,13 +288,13 @@ export default function EditExamPage() {
                 onFileSelect={handleFileSelect}
               />
               <p className="text-xs text-gray-500">
-                Upload a new PDF to replace the current one (optional)
+                Faça upload de um novo PDF para substituir o atual (opcional)
               </p>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="rubric">Grading Rubric</Label>
+                <Label htmlFor="rubric">Critérios de Avaliação</Label>
                 <Button
                   type="button"
                   size="sm"
@@ -303,12 +305,12 @@ export default function EditExamPage() {
                   {isGeneratingRubric ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
+                      Gerando...
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      Generate with AI
+                      Gerar com IA
                     </>
                   )}
                 </Button>
@@ -326,7 +328,7 @@ export default function EditExamPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="answerKey">Answer Key</Label>
+                <Label htmlFor="answerKey">Gabarito</Label>
                 <Button
                   type="button"
                   size="sm"
@@ -337,12 +339,12 @@ export default function EditExamPage() {
                   {isGeneratingAnswerKey ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
+                      Gerando...
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      Generate with AI
+                      Gerar com IA
                     </>
                   )}
                 </Button>
@@ -364,16 +366,16 @@ export default function EditExamPage() {
               onClick={() => router.back()}
               type="button"
             >
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit" disabled={isSaving}>
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving
+                  Salvando
                 </>
               ) : (
-                "Save Changes"
+                "Salvar Alterações"
               )}
             </Button>
           </CardFooter>
