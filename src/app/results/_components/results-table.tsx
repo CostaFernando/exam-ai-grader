@@ -55,12 +55,10 @@ export function ResultsTable({ examId }: ResultsTableProps) {
 
         let query;
         if (examId) {
-          // Query for specific exam
           query = db.query.examAnswersTable.findMany({
             where: eq(examAnswersTable.examId, Number(examId)),
           });
         } else {
-          // Query all answers, with their exams
           query = db.query.examAnswersTable.findMany({
             with: {
               exam: true,

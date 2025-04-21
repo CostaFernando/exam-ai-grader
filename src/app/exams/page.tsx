@@ -76,7 +76,6 @@ export default function ExamsPage() {
 
   const router = useRouter();
 
-  // Update the gradeExam function to include the grade parameter
   const gradeExam = (id: number) => {
     router.push(`/exams/${id}?tab=answerSheets&grade=true`);
   };

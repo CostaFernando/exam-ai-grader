@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 interface FileUploaderProps {
   accept: string;
-  maxSize: number; // in MB
+  maxSize: number;
   onFileSelect: (files: File[]) => void;
   multiple?: boolean;
   file?: File | null;
@@ -33,14 +33,12 @@ export function FileUploader({
     const validFiles: File[] = [];
 
     for (const file of selectedFiles) {
-      // Check file type
       const fileType = file.type;
       if (!accept.includes(fileType.split("/")[1])) {
         errorMsg = `Invalid file type. Please upload a ${accept} file.`;
         continue;
       }
 
-      // Check file size
       const fileSizeInMB = file.size / (1024 * 1024);
       if (fileSizeInMB > maxSize) {
         errorMsg = `File ${file.name} is too large. Maximum size is ${maxSize}MB.`;

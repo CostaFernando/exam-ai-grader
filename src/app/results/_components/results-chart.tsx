@@ -16,35 +16,27 @@ interface ResultsChartProps {
 }
 
 export function ResultsChart({ answers = [] }: ResultsChartProps) {
-  // Transform data for the chart
   const { chartData, emptyData } = useMemo(() => {
-    // Filter out null scores
     const validScores = answers
       .filter((a) => a.score !== null)
       .map((a) => a.score as number);
 
-    // Return early if no data
     if (validScores.length === 0) {
       return { chartData: [], emptyData: true };
     }
 
-    // Determine appropriate number of bins based on data range and count
     const dataPoints = validScores.length;
     let numberOfBins = Math.min(10, Math.max(5, Math.ceil(dataPoints / 2)));
 
-    // Create score ranges that make sense for the actual data
     const minScore = Math.max(0, Math.floor(Math.min(...validScores)));
     const maxScoreValue = Math.ceil(Math.max(...validScores));
 
     const range = maxScoreValue - minScore;
     const binSize = Math.max(1, Math.ceil(range / numberOfBins));
-    // Adjust numberOfBins based on binSize to avoid too many bins
     numberOfBins = Math.ceil(range / binSize);
 
-    // Create bins with appropriate ranges
     const bins: number[] = Array(numberOfBins).fill(0);
 
-    // Count scores in each bin
     validScores.forEach((score) => {
       const binIndex = Math.min(
         Math.floor((score - minScore) / binSize),
@@ -53,7 +45,6 @@ export function ResultsChart({ answers = [] }: ResultsChartProps) {
       bins[binIndex]++;
     });
 
-    // Format data for Recharts
     const data = bins.map((count, index) => {
       const rangeStart = minScore + index * binSize;
       const rangeEnd = Math.min(
@@ -73,17 +64,13 @@ export function ResultsChart({ answers = [] }: ResultsChartProps) {
     return { chartData: data, emptyData: false };
   }, [answers]);
 
-  // Chart configuration
   const chartConfig = {
     count: {
       label: "Submissions",
-      // color: "hsl(var(--purple-500))",
-      // use hex color
       color: "#7c3aed",
     },
   } satisfies ChartConfig;
 
-  // Display empty state if no data
   if (emptyData) {
     return (
       <div className="flex flex-col items-center justify-center h-[120px] w-full text-muted-foreground border rounded-md border-dashed">

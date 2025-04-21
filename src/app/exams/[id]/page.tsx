@@ -52,7 +52,6 @@ import {
   type GradeResult,
 } from "@/server/actions/ai-assistant/assessment-grader/assessment-grader-actions";
 
-// Import the GradingOverlay component at the top of the file
 import { GradingOverlay } from "@/app/exams/[id]/_components/grading-overlay";
 
 type Exam = {
@@ -96,15 +95,9 @@ export default function ExamDetailsPage() {
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
 
-  // Function to handle tab changes
   const handleTabChange = (value: string) => {
-    // Create a new URLSearchParams object from the current search params
     const newSearchParams = new URLSearchParams(searchParams.toString());
-
-    // Update the tab parameter
     newSearchParams.set("tab", value);
-
-    // Navigate to the new URL with updated search params
     router.push(`/exams/${examId}?${newSearchParams.toString()}`);
   };
 
@@ -119,11 +112,9 @@ export default function ExamDetailsPage() {
         setLoading(false);
       }
     }
-
     initializeDatabaseAndSetDb();
   }, []);
 
-  // pull fetchExam out for reuse in callbacks and effects
   const fetchExam = useCallback(async () => {
     if (!db || !examId) return;
 
@@ -147,7 +138,6 @@ export default function ExamDetailsPage() {
     }
   }, [db, examId]);
 
-  // use effect now simply calls the shared fetchExam
   useEffect(() => {
     if (db && examId) {
       fetchExam();
@@ -251,15 +241,12 @@ export default function ExamDetailsPage() {
         return;
       }
 
-      // Set grading state to true
       setIsGrading(true);
 
       try {
-        // load exam PDF
         const examFileObject = await getFileFromReference(exam.url!);
         if (!examFileObject) throw new Error("Could not retrieve exam file");
 
-        // load all answer sheet Files
         const answersWithFiles = await Promise.all(
           answersToGrade.map(async (ans) => {
             const file = await getFileFromReference(ans.answerSheetUrl!);
@@ -267,7 +254,6 @@ export default function ExamDetailsPage() {
           })
         );
 
-        // call server-action
         const results: GradeResult[] = await gradeMultipleAnswerSheets(
           examFileObject,
           answersWithFiles,
@@ -275,7 +261,6 @@ export default function ExamDetailsPage() {
           exam.answerKey ?? ""
         );
 
-        // update DB + state
         let successful = 0;
         for (const res of results) {
           if (res.score != null && db) {
@@ -291,7 +276,6 @@ export default function ExamDetailsPage() {
           }
         }
 
-        // refresh state from DB
         fetchExam();
 
         toast.success(
@@ -306,14 +290,12 @@ export default function ExamDetailsPage() {
         console.error("Error during grading:", error);
         toast.error("An error occurred during grading. Please try again.");
       } finally {
-        // Set grading state back to false
         setIsGrading(false);
       }
     },
     [exam, db, examId, fetchExam, router]
   );
 
-  // Add useEffect for beforeunload event to prevent navigation during grading
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isGrading) {
@@ -327,7 +309,6 @@ export default function ExamDetailsPage() {
     };
   }, [isGrading]);
 
-  // Helper function to get a File object from an IndexedDB reference
   async function getFileFromReference(fileRef: string): Promise<File | null> {
     if (!fileRef.startsWith("idb-file://")) {
       return null;
@@ -347,7 +328,6 @@ export default function ExamDetailsPage() {
     }
   }
 
-  // Parse file reference from URL
   function parseFileReference(
     fileRef: string
   ): { id: string; name: string; type: string } | null {
@@ -365,7 +345,6 @@ export default function ExamDetailsPage() {
     }
   }
 
-  // Get file from IndexedDB by ID
   async function getFileById(id: string | number): Promise<File | null> {
     return new Promise<File | null>((resolve, reject) => {
       const request = indexedDB.open("exams_ai_grader", 1);
@@ -405,7 +384,6 @@ export default function ExamDetailsPage() {
   }
 
   useEffect(() => {
-    // If the tab is set to answerSheets and there's a 'grade=true' parameter, trigger grading
     if (tabParam === "answerSheets") {
       if (shouldGrade) {
         gradeAnswers(false);
@@ -785,7 +763,6 @@ export default function ExamDetailsPage() {
                                         ];
                                         setExam(singleAnswerToRegrade);
                                         gradeAnswers(true).then(() => {
-                                          // Restore the full list after regrading
                                           fetchExam();
                                         });
                                       }}
