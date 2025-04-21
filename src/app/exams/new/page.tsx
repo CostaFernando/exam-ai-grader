@@ -34,11 +34,11 @@ import { generateAssessmentRubric } from "@/server/actions/ai-assistant/assessme
 import { generateAnswerKey } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Test name is required"),
-  url: z.string().min(1, "Test PDF is required"),
-  description: z.string().min(1, "Description is required"),
-  gradingRubric: z.string().min(1, "Grading rubric is required"),
-  answerKey: z.string().min(1, "Answer key is required"),
+  name: z.string().min(1, "Nome da prova é obrigatório"),
+  url: z.string().min(1, "PDF da prova é obrigatório"),
+  description: z.string().min(1, "Descrição é obrigatória"),
+  gradingRubric: z.string().min(1, "Critérios de correção são obrigatórios"),
+  answerKey: z.string().min(1, "Gabarito é obrigatório"),
 });
 
 export default function CreateExamPage() {
@@ -84,13 +84,13 @@ export default function CreateExamPage() {
       form.setValue("url", fileRef);
     } catch (error) {
       console.error("Error storing file:", error);
-      toast.error("Failed to upload file");
+      toast.error("Falha ao enviar arquivo");
     }
   };
 
   const handleGenerateRubric = async () => {
     if (!selectedFile) {
-      toast.error("Please upload a test PDF first");
+      toast.error("Por favor, envie o PDF da prova primeiro");
       return;
     }
 
@@ -98,10 +98,10 @@ export default function CreateExamPage() {
     try {
       const rubric = await generateAssessmentRubric(selectedFile);
       form.setValue("gradingRubric", rubric);
-      toast.success("Grading rubric generated successfully!");
+      toast.success("Critérios de correção gerados com sucesso!");
     } catch (error) {
       console.error("Error generating rubric:", error);
-      toast.error("Failed to generate grading rubric");
+      toast.error("Falha ao gerar critérios de correção");
     } finally {
       setIsGeneratingRubric(false);
     }
@@ -109,7 +109,7 @@ export default function CreateExamPage() {
 
   const handleGenerateAnswerKey = async () => {
     if (!selectedFile) {
-      toast.error("Please upload a test PDF first");
+      toast.error("Por favor, envie o PDF da prova primeiro");
       return;
     }
 
@@ -117,10 +117,10 @@ export default function CreateExamPage() {
     try {
       const answerKeyText = await generateAnswerKey(selectedFile);
       form.setValue("answerKey", answerKeyText);
-      toast.success("Answer key generated successfully!");
+      toast.success("Gabarito gerado com sucesso!");
     } catch (error) {
       console.error("Error generating answer key:", error);
-      toast.error("Failed to generate answer key");
+      toast.error("Falha ao gerar gabarito");
     } finally {
       setIsGeneratingAnswerKey(false);
     }
@@ -128,7 +128,7 @@ export default function CreateExamPage() {
 
   async function createExamInDb(data: z.infer<typeof formSchema>) {
     if (!db) {
-      throw new Error("Database not initialized");
+      throw new Error("Banco de dados não inicializado");
     }
 
     const exam = await db
@@ -152,12 +152,12 @@ export default function CreateExamPage() {
 
     try {
       await createExamInDb(data);
-      toast.success("Test created successfully!");
+      toast.success("Prova criada com sucesso!");
       router.push("/exams");
     } catch (error) {
       console.error("Error creating test:", error);
       const message =
-        error instanceof Error ? error.message : "Failed to create test";
+        error instanceof Error ? error.message : "Falha ao criar prova";
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -167,18 +167,18 @@ export default function CreateExamPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Create New Test</h1>
+      <h1 className="text-3xl font-bold mb-6">Criar Nova Prova</h1>
 
       <Card className="max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardHeader>
-              <CardTitle>Test Details</CardTitle>
+              <CardTitle>Detalhes da Prova</CardTitle>
               <CardDescription>
-                Upload your test PDF and configure grading criteria
+                Envie o PDF da sua prova e configure os critérios de correção
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="mt-6 space-y-6">
               {errorMessage && (
                 <div className="text-red-500 text-sm">{errorMessage}</div>
               )}
@@ -188,9 +188,9 @@ export default function CreateExamPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Test Name</FormLabel>
+                    <FormLabel>Nome da Prova</FormLabel>
                     <FormControl>
-                      <Input placeholder="Midterm Exam" {...field} />
+                      <Input placeholder="Nome da Prova" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -198,7 +198,7 @@ export default function CreateExamPage() {
               />
 
               <div className="space-y-2">
-                <FormLabel>Test PDF</FormLabel>
+                <FormLabel>PDF da Prova</FormLabel>
                 <FileUploader
                   accept=".pdf"
                   maxSize={10}
@@ -225,10 +225,10 @@ export default function CreateExamPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Descrição</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter a brief description of the test"
+                        placeholder="Insira uma breve descrição da prova"
                         rows={3}
                         {...field}
                       />
@@ -244,7 +244,7 @@ export default function CreateExamPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex justify-between items-center">
-                      <FormLabel>Grading Rubric</FormLabel>
+                      <FormLabel>Critérios de Correção</FormLabel>
                       <Button
                         type="button"
                         size="sm"
@@ -255,21 +255,21 @@ export default function CreateExamPage() {
                         {isGeneratingRubric ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Generating...
+                            Gerando...
                           </>
                         ) : (
                           <>
                             <Sparkles className="mr-2 h-4 w-4" />
-                            Generate with AI
+                            Gerar com IA
                           </>
                         )}
                       </Button>
                     </div>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter your grading criteria here. For example:
-- Question 1 (10 points): Complete explanation of concept X
-- Question 2 (15 points): Correct application of formula Y"
+                        placeholder="Insira seus critérios de correção aqui. Por exemplo:
+- Questão 1 (10 pontos): Explicação completa do conceito X
+- Questão 2 (15 pontos): Aplicação correta da fórmula Y"
                         rows={6}
                         {...field}
                       />
@@ -285,7 +285,7 @@ export default function CreateExamPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex justify-between items-center">
-                      <FormLabel>Answer Key</FormLabel>
+                      <FormLabel>Gabarito</FormLabel>
                       <Button
                         type="button"
                         size="sm"
@@ -296,19 +296,19 @@ export default function CreateExamPage() {
                         {isGeneratingAnswerKey ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Generating...
+                            Gerando...
                           </>
                         ) : (
                           <>
                             <Sparkles className="mr-2 h-4 w-4" />
-                            Generate with AI
+                            Gerar com IA
                           </>
                         )}
                       </Button>
                     </div>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter the correct answers for each question here."
+                        placeholder="Insira as respostas corretas para cada questão aqui."
                         rows={6}
                         {...field}
                       />
@@ -318,22 +318,22 @@ export default function CreateExamPage() {
                 )}
               />
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="mt-6 flex justify-between">
               <Button
                 variant="outline"
                 onClick={() => router.back()}
                 type="button"
               >
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing
+                    Processando
                   </>
                 ) : (
-                  "Create Test"
+                  "Criar Prova"
                 )}
               </Button>
             </CardFooter>

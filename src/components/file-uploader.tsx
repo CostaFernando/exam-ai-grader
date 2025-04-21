@@ -35,13 +35,13 @@ export function FileUploader({
     for (const file of selectedFiles) {
       const fileType = file.type;
       if (!accept.includes(fileType.split("/")[1])) {
-        errorMsg = `Invalid file type. Please upload a ${accept} file.`;
+        errorMsg = `Tipo de arquivo inválido. Por favor, envie um arquivo ${accept}.`;
         continue;
       }
 
       const fileSizeInMB = file.size / (1024 * 1024);
       if (fileSizeInMB > maxSize) {
-        errorMsg = `File ${file.name} is too large. Maximum size is ${maxSize}MB.`;
+        errorMsg = `Arquivo ${file.name} é muito grande. O tamanho máximo é ${maxSize}MB.`;
         continue;
       }
 
@@ -110,11 +110,11 @@ export function FileUploader({
           <div className="flex flex-col items-center justify-center space-y-2">
             <Upload className="h-10 w-10 text-gray-400" />
             <p className="text-sm font-medium">
-              Drag and drop {multiple ? "files" : "a file"} here or click to
-              browse
+              Arraste e solte {multiple ? "arquivos" : "um arquivo"} aqui ou
+              clique para procurar
             </p>
             <p className="text-xs text-gray-500">
-              Supports {accept} files up to {maxSize}MB
+              Suporta arquivos {accept} de até {maxSize}MB
             </p>
           </div>
           <input
