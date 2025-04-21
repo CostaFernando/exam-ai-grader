@@ -87,7 +87,7 @@ export default function ExamsPage() {
         setDb(database);
       } catch (err) {
         console.error("Failed to initialize database:", err);
-        setError("Failed to connect to database");
+        setError("Falha ao conectar ao banco de dados");
         setLoading(false);
       }
     }
@@ -109,7 +109,7 @@ export default function ExamsPage() {
         setExams(result);
       } catch (err) {
         console.error("Error fetching exams:", err);
-        setError("Failed to load exams");
+        setError("Falha ao carregar provas");
       } finally {
         setLoading(false);
       }
@@ -138,11 +138,11 @@ export default function ExamsPage() {
   const formatStatus = (status: string) => {
     switch (status) {
       case "IN_PROGRESS":
-        return "Active";
+        return "Ativa";
       case "COMPLETED":
-        return "Completed";
+        return "Concluída";
       case "ARCHIVED":
-        return "Archived";
+        return "Arquivada";
       default:
         return status;
     }
@@ -164,20 +164,20 @@ export default function ExamsPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Exams</h1>
+        <h1 className="text-3xl font-bold">Provas</h1>
         <Link href="/exams/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Create New Test
+            Criar Nova Prova
           </Button>
         </Link>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Todas Exams</CardTitle>
+          <CardTitle>Todas as Provas</CardTitle>
           <CardDescription>
-            Manage your created tests and their grading status
+            Gerencie suas provas criadas e o status de correção
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -185,7 +185,7 @@ export default function ExamsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search tests..."
+                placeholder="Buscar provas..."
                 className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -193,13 +193,13 @@ export default function ExamsPage() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Filter</Button>
+                <Button variant="outline">Filtrar</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Todas Exams</DropdownMenuItem>
-                <DropdownMenuItem>Active</DropdownMenuItem>
-                <DropdownMenuItem>Completed</DropdownMenuItem>
-                <DropdownMenuItem>Archived</DropdownMenuItem>
+                <DropdownMenuItem>Todas as Provas</DropdownMenuItem>
+                <DropdownMenuItem>Ativa</DropdownMenuItem>
+                <DropdownMenuItem>Concluída</DropdownMenuItem>
+                <DropdownMenuItem>Arquivada</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -207,7 +207,7 @@ export default function ExamsPage() {
           {loading ? (
             <div className="text-center py-10">
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-gray-400" />
-              <p className="mt-2 text-gray-500">Loading exams...</p>
+              <p className="mt-2 text-gray-500">Carregando provas...</p>
             </div>
           ) : error ? (
             <div className="text-center py-10">
@@ -216,17 +216,17 @@ export default function ExamsPage() {
           ) : filteredExams.length === 0 ? (
             <div className="text-center py-10">
               <FileText className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-              <h3 className="text-lg font-medium">No tests found</h3>
+              <h3 className="text-lg font-medium">Nenhuma prova encontrada</h3>
               <p className="text-sm text-gray-500 mb-4">
                 {searchTerm
-                  ? "Try a different search term"
-                  : "Create your first test to get started"}
+                  ? "Tente um termo de busca diferente"
+                  : "Crie sua primeira prova para começar"}
               </p>
               {!searchTerm && (
                 <Link href="/exams/new">
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Create New Test
+                    Criar Nova Prova
                   </Button>
                 </Link>
               )}
@@ -236,11 +236,11 @@ export default function ExamsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Test Name</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Answer Sheets Graded</TableHead>
+                    <TableHead>Nome da Prova</TableHead>
+                    <TableHead>Criada em</TableHead>
+                    <TableHead>Folhas de Resposta</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -277,38 +277,38 @@ export default function ExamsPage() {
                               <Link href={`/exams/${exam.id}`}>
                                 <DropdownMenuItem>
                                   <Eye className="h-4 w-4 mr-2" />
-                                  View Details
+                                  Ver Detalhes
                                 </DropdownMenuItem>
                               </Link>
                               <Link href={`/exams/${exam.id}/edit`}>
                                 <DropdownMenuItem>
                                   <Edit className="h-4 w-4 mr-2" />
-                                  Edit Test
+                                  Editar Prova
                                 </DropdownMenuItem>
                               </Link>
                               <DropdownMenuItem
                                 onClick={() => gradeExam(exam.id)}
                               >
                                 <FileText className="h-4 w-4 mr-2" />
-                                Grade Answers
+                                Corrigir Respostas
                               </DropdownMenuItem>
                               <Link href={`/answers/upload?examId=${exam.id}`}>
                                 <DropdownMenuItem>
                                   <Plus className="h-4 w-4 mr-2" />
-                                  Add Answer Sheets
+                                  Adicionar Folhas de Resposta
                                 </DropdownMenuItem>
                               </Link>
                               <Link href={`/results?examId=${exam.id}`}>
                                 <DropdownMenuItem>
                                   <BarChart className="h-4 w-4 mr-2" />
-                                  View Results
+                                  Ver Resultados
                                 </DropdownMenuItem>
                               </Link>
                               <DropdownMenuItem
                                 onClick={() => handleDeleteExam(exam.id)}
                               >
                                 <Trash2 className="h-4 w-4 mr-2 text-red-500" />
-                                <span className="text-red-500">Delete</span>
+                                <span className="text-red-500">Excluir</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
