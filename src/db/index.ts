@@ -1,31 +1,39 @@
 import { PGlite } from "@electric-sql/pglite";
-import { drizzle } from "drizzle-orm/pglite";
+import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
 import * as schema from "./schema";
 import { createSchemaQueries } from "./create-schema-queries";
 
 const INDEXEDDB_DATABASE_NAME = "exams_ai_grader";
 
-export async function initializeDatabase() {
-  const client = await PGlite.create(`idb://${INDEXEDDB_DATABASE_NAME}`, {
-    relaxedDurability: true,
-  });
-  const db = drizzle({
-    client,
-    schema,
-  });
+let dbInstancePromise: Promise<PgliteDatabase<typeof schema>> | null = null;
 
-  let isLocalDBSchemaSynced = false;
-  if (!isLocalDBSchemaSynced) {
+export async function initializeDatabase(): Promise<
+  PgliteDatabase<typeof schema>
+> {
+  if (dbInstancePromise) {
+    return dbInstancePromise;
+  }
+
+  dbInstancePromise = (async () => {
     try {
+      console.info("🚀 Initializing local database...");
+      const client = await PGlite.create(`idb://${INDEXEDDB_DATABASE_NAME}`, {
+        relaxedDurability: true,
+      });
+      const db = drizzle(client, { schema });
+
+      console.info("⚙️ Syncing local database schema...");
       for (const query of createSchemaQueries) {
         await db.execute(query);
       }
-      isLocalDBSchemaSynced = true;
-      console.info(`✅ Local database ready`);
+      console.info("✅ Local database ready");
+      return db;
     } catch (error) {
-      console.error(`❌ Local database failed to sync: ${error}`);
+      console.error(`❌ Local database initialization failed: ${error}`);
+      dbInstancePromise = null;
+      throw error;
     }
-  }
+  })();
 
-  return db;
+  return dbInstancePromise;
 }
