@@ -13,31 +13,36 @@ export async function generateAnswerKey(assessmentFile: File): Promise<string> {
 
   const aiProvider = getAIProvider(provider);
 
-  const { text } = await generateText({
-    model: aiProvider(modelName),
-    headers: {
-      "Helicone-Property-Feature": "generate-answer-key",
-      "Helicone-Property-Source": "assessment-ai-grader",
-    },
-    system,
-    temperature: 1,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Baseado nesta prova, gere o gabarito com solução para cada questão.",
-          },
-          {
-            type: "file",
-            data: await assessmentFile.arrayBuffer(),
-            mimeType: "application/pdf",
-          },
-        ],
+  try {
+    const { text } = await generateText({
+      model: aiProvider(modelName),
+      headers: {
+        "Helicone-Property-Feature": "generate-answer-key",
+        "Helicone-Property-Source": "assessment-ai-grader",
       },
-    ],
-  });
+      system,
+      temperature: 1,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Baseado nesta prova, gere o gabarito com solução para cada questão.",
+            },
+            {
+              type: "file",
+              data: await assessmentFile.arrayBuffer(),
+              mimeType: "application/pdf",
+            },
+          ],
+        },
+      ],
+    });
 
-  return text;
+    return text;
+  } catch (error) {
+    console.error("Error generating answer key:", error);
+    throw error;
+  }
 }

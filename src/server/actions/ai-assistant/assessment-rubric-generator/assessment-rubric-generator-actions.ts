@@ -20,31 +20,36 @@ Escreva diretamente, sem preâmbulos, as rubricas de avaliação para cada quest
 
   const aiProvider = getAIProvider(provider);
 
-  const { text } = await generateText({
-    model: aiProvider(modelName),
-    headers: {
-      "Helicone-Property-Feature": "generate-assessment-rubric",
-      "Helicone-Property-Source": "assessment-ai-grader",
-    },
-    system,
-    temperature: 1,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Baseado nesta prova, gere as rubricas de avaliação para cada questão.",
-          },
-          {
-            type: "file",
-            data: await assessmentFile.arrayBuffer(),
-            mimeType: "application/pdf",
-          },
-        ],
+  try {
+    const { text } = await generateText({
+      model: aiProvider(modelName),
+      headers: {
+        "Helicone-Property-Feature": "generate-assessment-rubric",
+        "Helicone-Property-Source": "assessment-ai-grader",
       },
-    ],
-  });
+      system,
+      temperature: 1,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Baseado nesta prova, gere as rubricas de avaliação para cada questão.",
+            },
+            {
+              type: "file",
+              data: await assessmentFile.arrayBuffer(),
+              mimeType: "application/pdf",
+            },
+          ],
+        },
+      ],
+    });
 
-  return text;
+    return text;
+  } catch (error) {
+    console.error("Error generating assessment rubric:", error);
+    throw error;
+  }
 }

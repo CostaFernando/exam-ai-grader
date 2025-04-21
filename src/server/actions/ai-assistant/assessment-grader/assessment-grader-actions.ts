@@ -34,86 +34,91 @@ Diretrizes a serem seguidas:
 
   const aiProvider = getAIProvider(provider);
 
-  const { object } = await generateObject({
-    model: aiProvider(modelName),
-    headers: {
-      "Helicone-Property-Feature": "grade-answer-sheet",
-      "Helicone-Property-Source": "assessment-ai-grader",
-    },
-    schema: z
-      .object({
-        questoes: z.array(
-          z
-            .object({
-              questaoNumero: z
-                .number()
-                .describe("Número identificador da questão."),
-              feedback: z
-                .string()
-                .describe(
-                  "Feedback detalhado para o estudante, deixando claro a pontuação que o estudante tirou em cada critério e alternativa da questão. Explicando os erros e como melhorar."
-                ),
-              nota: z
-                .number()
-                .describe(
-                  "Nota final da questão (soma das notas por critério), com duas casas decimais."
-                ),
-            })
-            .strict()
-        ),
-      })
-      .strict(),
-    system,
-    temperature: 1,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Estas são as questões da prova:",
-          },
-          {
-            type: "file",
-            data: await assessmentFile.arrayBuffer(),
-            mimeType: "application/pdf",
-          },
-          {
-            type: "text",
-            text: `Estes são os critérios de correção:\n${gradingRubric}`,
-          },
-          {
-            type: "text",
-            text: `Este é o gabarito:\n${answerKey}`,
-          },
-          {
-            type: "text",
-            text: "Esta é a prova do estudante:",
-          },
-          {
-            type: "file",
-            data: await answerSheet.arrayBuffer(),
-            mimeType: "application/pdf",
-          },
-        ],
+  try {
+    const { object } = await generateObject({
+      model: aiProvider(modelName),
+      headers: {
+        "Helicone-Property-Feature": "grade-answer-sheet",
+        "Helicone-Property-Source": "assessment-ai-grader",
       },
-    ],
-  });
+      schema: z
+        .object({
+          questoes: z.array(
+            z
+              .object({
+                questaoNumero: z
+                  .number()
+                  .describe("Número identificador da questão."),
+                feedback: z
+                  .string()
+                  .describe(
+                    "Feedback detalhado para o estudante, deixando claro a pontuação que o estudante tirou em cada critério e alternativa da questão. Explicando os erros e como melhorar."
+                  ),
+                nota: z
+                  .number()
+                  .describe(
+                    "Nota final da questão (soma das notas por critério), com duas casas decimais."
+                  ),
+              })
+              .strict()
+          ),
+        })
+        .strict(),
+      system,
+      temperature: 1,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Estas são as questões da prova:",
+            },
+            {
+              type: "file",
+              data: await assessmentFile.arrayBuffer(),
+              mimeType: "application/pdf",
+            },
+            {
+              type: "text",
+              text: `Estes são os critérios de correção:\n${gradingRubric}`,
+            },
+            {
+              type: "text",
+              text: `Este é o gabarito:\n${answerKey}`,
+            },
+            {
+              type: "text",
+              text: "Esta é a prova do estudante:",
+            },
+            {
+              type: "file",
+              data: await answerSheet.arrayBuffer(),
+              mimeType: "application/pdf",
+            },
+          ],
+        },
+      ],
+    });
 
-  const score = object.questoes.reduce(
-    (acc, questao) => acc + Number(questao.nota),
-    0
-  );
-  const feedback = object.questoes
-    .map((questao) => {
-      return questao.feedback;
-    })
-    .join("\n\n");
+    const score = object.questoes.reduce(
+      (acc, questao) => acc + Number(questao.nota),
+      0
+    );
+    const feedback = object.questoes
+      .map((questao) => {
+        return questao.feedback;
+      })
+      .join("\n\n");
 
-  return {
-    score,
-    feedback,
-  };
+    return {
+      score,
+      feedback,
+    };
+  } catch (error) {
+    console.error("Error grading answer sheet:", error);
+    throw error;
+  }
 }
 
 export type GradeResult = {
