@@ -38,11 +38,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${inter.variable} ${roboto_mono.variable} antialiased`}
-    >
-      <body>
+    <html lang="pt-BR">
+      <body className={`${inter.variable} ${roboto_mono.variable} antialiased`}>
         <PostHogProvider>
           <ThemeProvider
             attribute="class"
