@@ -10,14 +10,7 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  FileText,
-  BarChart2,
-  Settings,
-  Menu,
-  ClipboardCheck,
-  Bot,
-} from "lucide-react";
+import { FileText, BarChart2, Menu, ClipboardCheck, Bot } from "lucide-react";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +32,6 @@ export default function Navbar() {
       name: "Results",
       href: "/results",
       icon: <BarChart2 className="h-4 w-4 mr-2" />,
-    },
-    {
-      name: "Settings",
-      href: "/settings",
-      icon: <Settings className="h-4 w-4 mr-2" />,
     },
   ];
 
