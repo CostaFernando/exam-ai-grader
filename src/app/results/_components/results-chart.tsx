@@ -66,7 +66,7 @@ export function ResultsChart({ answers = [] }: ResultsChartProps) {
 
   const chartConfig = {
     count: {
-      label: "Submissions",
+      label: "Envios",
       color: "#7c3aed",
     },
   } satisfies ChartConfig;
@@ -75,7 +75,7 @@ export function ResultsChart({ answers = [] }: ResultsChartProps) {
     return (
       <div className="flex flex-col items-center justify-center h-[120px] w-full text-muted-foreground border rounded-md border-dashed">
         <AlertCircle className="h-4 w-4 mb-2" />
-        <p className="text-sm">No score data available</p>
+        <p className="text-sm">Nenhum dado de pontuação disponível</p>
       </div>
     );
   }

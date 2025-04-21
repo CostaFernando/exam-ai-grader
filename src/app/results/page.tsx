@@ -92,7 +92,7 @@ export default function ResultsPage() {
         }
       } catch (err) {
         console.error("Error fetching exams:", err);
-        setError("Failed to load exams");
+        setError("Falha ao carregar provas");
       } finally {
         setFetchingExams(false);
       }
@@ -149,7 +149,7 @@ export default function ResultsPage() {
         }
       } catch (err) {
         console.error("Error fetching answers:", err);
-        setError("Failed to load answer data");
+        setError("Falha ao carregar dados das respostas");
       } finally {
         setLoading(false);
       }
@@ -167,7 +167,7 @@ export default function ResultsPage() {
   };
 
   const handleExport = () => {
-    const headers = ["Student", "Score", "Feedback"];
+    const headers = ["Aluno", "Nota", "Feedback"];
     const rows = answers.map((answer) => [
       answer.name,
       answer.score ?? "",
@@ -184,7 +184,7 @@ export default function ResultsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "results-" + selectedExam + ".csv");
+    link.setAttribute("download", "resultados-" + selectedExam + ".csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -199,7 +199,7 @@ export default function ResultsPage() {
       await openFileFromReference(answerSheetUrl);
     } catch (error) {
       console.error("Error opening file:", error);
-      toast.error("Failed to open file");
+      toast.error("Falha ao abrir o arquivo");
     } finally {
       setViewingSheetLoading(false);
     }
@@ -208,11 +208,11 @@ export default function ResultsPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Grading Results</h1>
+        <h1 className="text-3xl font-bold">Resultados da Correção</h1>
         <div className="flex items-center gap-2">
           <Select value={selectedExam} onValueChange={setSelectedExam}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select a test" />
+              <SelectValue placeholder="Selecione uma prova" />
             </SelectTrigger>
             <SelectContent>
               {exams.map((exam) => (
@@ -228,7 +228,7 @@ export default function ResultsPage() {
             disabled={answers.length === 0}
           >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Exportar
           </Button>
         </div>
       </div>
@@ -236,7 +236,7 @@ export default function ResultsPage() {
       {fetchingExams ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          <span className="ml-2 text-gray-500">Loading tests...</span>
+          <span className="ml-2 text-gray-500">Carregando provas...</span>
         </div>
       ) : error ? (
         <div className="py-10 text-center">
@@ -246,13 +246,13 @@ export default function ResultsPage() {
         <div className="text-center py-20">
           <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
           <p className="text-xl text-gray-500">
-            Please select a test to view results
+            Por favor, selecione uma prova para ver os resultados
           </p>
         </div>
       ) : loading ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          <span className="ml-2 text-gray-500">Loading results...</span>
+          <span className="ml-2 text-gray-500">Carregando resultados...</span>
         </div>
       ) : (
         <>
@@ -260,7 +260,7 @@ export default function ResultsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Grading Status
+                  Status da Correção
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -274,7 +274,7 @@ export default function ResultsPage() {
                         gradingStatus.pending > 0 ? "outline" : "default"
                       }
                     >
-                      {gradingStatus.pending > 0 ? "In Progress" : "Completed"}
+                      {gradingStatus.pending > 0 ? "Em Andamento" : "Concluído"}
                     </Badge>
                   </div>
                   <Progress
@@ -286,22 +286,22 @@ export default function ResultsPage() {
                   />
                   <div className="grid grid-cols-3 text-center text-sm">
                     <div>
-                      <p className="text-gray-500">Completed</p>
+                      <p className="text-gray-500">Concluído</p>
                       <p className="font-bold">{gradingStatus.completed}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">In Progress</p>
+                      <p className="text-gray-500">Em Andamento</p>
                       <p className="font-bold">{gradingStatus.inProgress}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Pending</p>
+                      <p className="text-gray-500">Pendente</p>
                       <p className="font-bold">{gradingStatus.pending}</p>
                     </div>
                   </div>
                   {gradingStatus.pending > 0 && (
                     <Button variant="outline" size="sm" className="w-full">
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      Refresh Status
+                      Atualizar Status
                     </Button>
                   )}
                 </div>
@@ -311,13 +311,13 @@ export default function ResultsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Average Score
+                  Nota Média
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col items-center justify-center h-full">
                   <div className="text-5xl font-bold">{averageScore}</div>
-                  <p className="text-sm text-gray-500 mt-2">Class Average</p>
+                  <p className="text-sm text-gray-500 mt-2">Média da Turma</p>
                 </div>
               </CardContent>
             </Card>
@@ -325,7 +325,7 @@ export default function ResultsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Score Distribution
+                  Distribuição de Notas
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -338,18 +338,20 @@ export default function ResultsPage() {
 
           <Tabs defaultValue="table">
             <TabsList className="mb-4">
-              <TabsTrigger value="table">Table View</TabsTrigger>
-              <TabsTrigger value="individual">Individual Results</TabsTrigger>
+              <TabsTrigger value="table">Visão em Tabela</TabsTrigger>
+              <TabsTrigger value="individual">
+                Resultados Individuais
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="table">
               <Card>
                 <CardHeader>
-                  <CardTitle>Student Results</CardTitle>
+                  <CardTitle>Resultados dos Alunos</CardTitle>
                   <CardDescription>
-                    Complete grading results for{" "}
+                    Resultados completos da correção para{" "}
                     {exams.find((e) => e.id.toString() === selectedExam)
-                      ?.name || "selected test"}
+                      ?.name || "prova selecionada"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -376,13 +378,13 @@ export default function ResultsPage() {
                           <div className="text-gray-500">Status:</div>
                           <div>
                             {answer.score && answer.feedback
-                              ? "Completed"
+                              ? "Concluído"
                               : answer.score || answer.feedback
-                              ? "In Progress"
-                              : "Pending"}
+                              ? "Em Andamento"
+                              : "Pendente"}
                           </div>
 
-                          <div className="text-gray-500">Score:</div>
+                          <div className="text-gray-500">Nota:</div>
                           <div>
                             {answer.score !== null ? answer.score : "-"}
                           </div>
@@ -396,7 +398,7 @@ export default function ResultsPage() {
                           disabled={!answer.feedback && !answer.score}
                         >
                           <FileText className="h-4 w-4 mr-2" />
-                          View Feedback
+                          Ver Feedback
                         </Button>
                       </div>
                     </CardContent>
@@ -406,7 +408,7 @@ export default function ResultsPage() {
                 {answers.length === 0 && (
                   <div className="col-span-3 text-center py-10">
                     <p className="text-gray-500">
-                      No answer sheets available for this test
+                      Nenhuma folha de resposta disponível para esta prova
                     </p>
                   </div>
                 )}
@@ -423,9 +425,9 @@ export default function ResultsPage() {
           >
             <DialogContent className="sm:max-w-3xl max-h-[90vh]">
               <DialogHeader>
-                <DialogTitle className="text-xl">Student Feedback</DialogTitle>
+                <DialogTitle className="text-xl">Feedback do Aluno</DialogTitle>
                 <DialogDescription className="text-base">
-                  {selectedAnswer?.name} - Score: {selectedAnswer?.score || 0}
+                  {selectedAnswer?.name} - Nota: {selectedAnswer?.score || 0}
                 </DialogDescription>
               </DialogHeader>
 
@@ -437,7 +439,7 @@ export default function ResultsPage() {
                   </div>
                 ) : (
                   <p className="text-gray-500 italic text-base">
-                    No feedback available yet.
+                    Nenhum feedback disponível ainda.
                   </p>
                 )}
               </div>
@@ -457,7 +459,7 @@ export default function ResultsPage() {
                     ) : (
                       <FileText className="h-4 w-4 mr-2" />
                     )}
-                    View Original Answer Sheet
+                    Ver Folha de Resposta Original
                   </Button>
                 </div>
               )}
@@ -468,7 +470,7 @@ export default function ResultsPage() {
                   size="lg"
                   className="text-base px-8"
                 >
-                  Close
+                  Fechar
                 </Button>
               </DialogFooter>
             </DialogContent>

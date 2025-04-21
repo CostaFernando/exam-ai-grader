@@ -73,7 +73,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
         setAnswers(result);
       } catch (err) {
         console.error("Error fetching exam answers:", err);
-        setError("Failed to load data");
+        setError("Falha ao carregar dados");
       } finally {
         setLoading(false);
       }
@@ -108,7 +108,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
       await openFileFromReference(answerSheetUrl);
     } catch (error) {
       console.error("Error opening file:", error);
-      toast.error("Failed to open file");
+      toast.error("Falha ao abrir o arquivo");
     } finally {
       setViewingSheetLoading(false);
     }
@@ -118,7 +118,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
     return (
       <div className="flex justify-center items-center py-10">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        <span className="ml-2 text-gray-500">Loading results...</span>
+        <span className="ml-2 text-gray-500">Carregando resultados...</span>
       </div>
     );
   }
@@ -137,14 +137,14 @@ export function ResultsTable({ examId }: ResultsTableProps) {
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Search students..."
+            placeholder="Buscar alunos..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <Button variant="outline" size="sm">
-          Filter
+          Filtrar
         </Button>
       </div>
 
@@ -152,8 +152,8 @@ export function ResultsTable({ examId }: ResultsTableProps) {
         <div className="text-center py-10">
           <p className="text-gray-500">
             {searchTerm
-              ? "No matching students found"
-              : "No answer sheets available yet"}
+              ? "Nenhum aluno correspondente encontrado"
+              : "Nenhuma folha de resposta disponível ainda"}
           </p>
         </div>
       ) : (
@@ -161,9 +161,9 @@ export function ResultsTable({ examId }: ResultsTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
+                <TableHead>Aluno</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Score</TableHead>
+                <TableHead className="text-right">Nota</TableHead>
                 <TableHead className="text-right">Feedback</TableHead>
               </TableRow>
             </TableHeader>
@@ -185,10 +185,10 @@ export function ResultsTable({ examId }: ResultsTableProps) {
                         }
                       >
                         {status === "completed"
-                          ? "Completed"
+                          ? "Concluído"
                           : status === "in-progress"
-                          ? "In Progress"
-                          : "Pending"}
+                          ? "Em Andamento"
+                          : "Pendente"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium">
@@ -221,9 +221,9 @@ export function ResultsTable({ examId }: ResultsTableProps) {
       >
         <DialogContent className="sm:max-w-3xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle className="text-xl">Student Feedback</DialogTitle>
+            <DialogTitle className="text-xl">Feedback do Aluno</DialogTitle>
             <DialogDescription className="text-base">
-              {selectedAnswer?.name} - Score: {selectedAnswer?.score || 0}
+              {selectedAnswer?.name} - Nota: {selectedAnswer?.score || 0}
             </DialogDescription>
           </DialogHeader>
 
@@ -235,7 +235,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
               </div>
             ) : (
               <p className="text-gray-500 italic text-base">
-                No feedback available yet.
+                Nenhum feedback disponível ainda.
               </p>
             )}
           </div>
@@ -255,7 +255,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
                 ) : (
                   <FileText className="h-4 w-4 mr-2" />
                 )}
-                View Original Answer Sheet
+                Ver Folha de Resposta Original
               </Button>
             </div>
           )}
@@ -266,7 +266,7 @@ export function ResultsTable({ examId }: ResultsTableProps) {
               size="lg"
               className="text-base px-8"
             >
-              Close
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>
