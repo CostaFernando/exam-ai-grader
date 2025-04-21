@@ -41,7 +41,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { initializeDatabase } from "@/db";
+import { initializeDatabase, type DbInstance } from "@/db";
 import { eq } from "drizzle-orm";
 import { examsTable, examAnswersTable, type examStatusEnum } from "@/db/schema";
 import { format } from "date-fns";
@@ -72,7 +72,7 @@ type ExamAnswer = {
   examId: number;
   name: string;
   answerSheetUrl: string | null;
-  score: number;
+  score: number | null;
   feedback: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -89,7 +89,7 @@ export default function ExamDetailsPage() {
   const examId = params.id;
 
   const [exam, setExam] = useState<Exam | null>(null);
-  const [db, setDb] = useState<any>(null);
+  const [db, setDb] = useState<DbInstance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [downloadLoading, setDownloadLoading] = useState(false);
@@ -237,7 +237,7 @@ export default function ExamDetailsPage() {
       if (!exam || exam.examAnswers.length === 0) return;
       const answersToGrade = forceRegrade
         ? exam.examAnswers
-        : exam.examAnswers.filter((a) => !a.score || a.score === 0);
+        : exam.examAnswers.filter((a) => a.score === null || a.score === 0);
       if (answersToGrade.length === 0) {
         toast.success("Todas as folhas de resposta já foram corrigidas!");
         return;
@@ -468,11 +468,15 @@ export default function ExamDetailsPage() {
   let lowestScore = 0;
 
   if (answersCount > 0) {
-    const scores = exam.examAnswers.map((answer) => answer.score);
-    averageScore =
-      scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    highestScore = Math.max(...scores);
-    lowestScore = Math.min(...scores);
+    const scores = exam.examAnswers
+      .map((answer) => answer.score)
+      .filter((score): score is number => score !== null);
+    if (scores.length > 0) {
+      averageScore =
+        scores.reduce((sum, score) => sum + score, 0) / scores.length;
+      highestScore = Math.max(...scores);
+      lowestScore = Math.min(...scores);
+    }
   }
 
   return (
@@ -740,7 +744,7 @@ export default function ExamDetailsPage() {
                               {answer.name}
                             </TableCell>
                             <TableCell>{createdDate}</TableCell>
-                            <TableCell>{answer.score}</TableCell>
+                            <TableCell>{answer.score ?? "-"}</TableCell>
                             <TableCell>
                               <Badge
                                 variant={

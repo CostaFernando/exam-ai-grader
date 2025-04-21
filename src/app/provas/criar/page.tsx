@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FileUploader } from "@/components/file-uploader";
 import { Loader2, Sparkles } from "lucide-react";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
-import { initializeDatabase } from "@/db";
+import { initializeDatabase, type DbInstance } from "@/db";
 import { examsTable } from "@/db/schema";
 import { generateAssessmentRubric } from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
 import { generateAnswerKey } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
@@ -43,7 +43,7 @@ const formSchema = z.object({
 
 export default function CreateExamPage() {
   const router = useRouter();
-  const [db, setDb] = useState<any>(null);
+  const [db, setDb] = useState<DbInstance | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [isGeneratingRubric, setIsGeneratingRubric] = useState(false);
   const [isGeneratingAnswerKey, setIsGeneratingAnswerKey] = useState(false);

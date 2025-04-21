@@ -24,7 +24,7 @@ import {
 import { FileUploader } from "@/components/file-uploader";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
-import { initializeDatabase } from "@/db";
+import { initializeDatabase, type DbInstance } from "@/db";
 import { examAnswersTable } from "@/db/schema";
 import { toast } from "sonner";
 
@@ -49,7 +49,7 @@ export default function UploadAnswersPage() {
       fileUrl: null,
     },
   ]);
-  const [db, setDb] = useState<any>(null);
+  const [db, setDb] = useState<DbInstance | null>(null);
   const [exams, setExams] = useState<any[]>([]);
 
   useEffect(() => {

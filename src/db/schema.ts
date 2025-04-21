@@ -18,12 +18,12 @@ export const examsTable = pgTable("exams", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: text().notNull(),
   description: text(),
-  status: examStatusEnum().default("IN_PROGRESS"),
+  status: examStatusEnum().default("IN_PROGRESS").notNull(),
   gradingRubric: text(),
   answerKey: text(),
   url: text(),
-  createdAt: timestamp().defaultNow(),
-  updatedAt: timestamp().defaultNow(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow().notNull(),
 });
 
 export const examsTableRelations = relations(examsTable, ({ many }) => ({
@@ -39,8 +39,8 @@ export const examAnswersTable = pgTable("exam_answers", {
   answerSheetUrl: text().notNull(),
   score: numeric({ precision: 3, scale: 2, mode: "number" }),
   feedback: text(),
-  createdAt: timestamp().defaultNow(),
-  updatedAt: timestamp().defaultNow(),
+  createdAt: timestamp().defaultNow().notNull(),
+  updatedAt: timestamp().defaultNow().notNull(),
 });
 
 export const examAnswersTableRelations = relations(

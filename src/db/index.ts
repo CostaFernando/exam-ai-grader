@@ -5,11 +5,11 @@ import { createSchemaQueries } from "./create-schema-queries";
 
 const INDEXEDDB_DATABASE_NAME = "exams_ai_grader";
 
-let dbInstancePromise: Promise<PgliteDatabase<typeof schema>> | null = null;
+export type DbInstance = PgliteDatabase<typeof schema>;
 
-export async function initializeDatabase(): Promise<
-  PgliteDatabase<typeof schema>
-> {
+let dbInstancePromise: Promise<DbInstance> | null = null;
+
+export async function initializeDatabase(): Promise<DbInstance> {
   if (dbInstancePromise) {
     return dbInstancePromise;
   }

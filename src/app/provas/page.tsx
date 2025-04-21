@@ -37,7 +37,7 @@ import {
   Loader2,
   BarChart,
 } from "lucide-react";
-import { initializeDatabase } from "@/db";
+import { initializeDatabase, type DbInstance } from "@/db";
 import { type examStatusEnum, examsTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { format } from "date-fns";
@@ -61,7 +61,7 @@ type ExamAnswer = {
   examId: number;
   name: string;
   answerSheetUrl: string | null;
-  score: number;
+  score: number | null;
   feedback: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -70,7 +70,7 @@ type ExamAnswer = {
 export default function ExamsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [exams, setExams] = useState<Exam[]>([]);
-  const [db, setDb] = useState<any>(null);
+  const [db, setDb] = useState<DbInstance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 

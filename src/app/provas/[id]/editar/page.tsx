@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUploader } from "@/components/file-uploader";
 import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
-import { initializeDatabase } from "@/db";
+import { initializeDatabase, type DbInstance } from "@/db";
 import { eq } from "drizzle-orm";
 import { examsTable } from "@/db/schema";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
@@ -41,7 +41,7 @@ export default function EditExamPage() {
   const examId = parseInt(params.id);
 
   const [exam, setExam] = useState<Exam | null>(null);
-  const [db, setDb] = useState<any>(null);
+  const [db, setDb] = useState<DbInstance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
