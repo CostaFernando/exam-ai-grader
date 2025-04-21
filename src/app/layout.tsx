@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { PostHogProvider } from "@/components/post-hog-provider";
+import type { Metadata } from "next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,7 +19,7 @@ const roboto_mono = Roboto_Mono({
   variable: "--font-roboto-mono",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "AI Grader",
   description: "Automatize a correção de provas com assistência de IA.",
 };
