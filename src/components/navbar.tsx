@@ -24,12 +24,12 @@ export default function Navbar() {
 
   const navItems = [
     {
-      name: "Exams",
+      name: "Provas",
       href: "/exams",
       icon: <FileText className="h-4 w-4 mr-2" />,
     },
     {
-      name: "Results",
+      name: "Resultados",
       href: "/results",
       icon: <BarChart2 className="h-4 w-4 mr-2" />,
     },
@@ -64,7 +64,7 @@ export default function Navbar() {
           >
             <Button variant="ghost" size="icon">
               <GithubIcon className="h-4 w-4 fill-current" />
-              <span className="sr-only">GitHub Repository</span>
+              <span className="sr-only">Repositório GitHub</span>
             </Button>
           </Link>
         </div>
@@ -78,7 +78,7 @@ export default function Navbar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] sm:w-[300px] p-0">
-              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
               <div className="flex flex-col h-full">
                 <div className="flex items-center p-6 border-b">
                   <Link
@@ -119,7 +119,7 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     <GithubIcon className="h-4 w-4 mr-2 fill-current" />
-                    GitHub Repository
+                    Repositório GitHub
                   </Link>
                 </div>
               </div>
