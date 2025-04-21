@@ -22,6 +22,14 @@ const roboto_mono = Roboto_Mono({
 export const metadata: Metadata = {
   title: "AI Grader",
   description: "Automatize a correção de provas com assistência de IA.",
+  openGraph: {
+    title: "AI Grader",
+    description: "Automatize a correção de provas com assistência de IA.",
+    url: "https://exam-ai-grader.vercel.app",
+    siteName: "AI Grader",
+    locale: "pt-BR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -31,7 +39,7 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="en"
+      lang="pt-BR"
       className={`${inter.variable} ${roboto_mono.variable} antialiased`}
     >
       <body>
