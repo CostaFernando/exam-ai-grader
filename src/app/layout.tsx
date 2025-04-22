@@ -6,6 +6,8 @@ import Navbar from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { PostHogProvider } from "@/components/post-hog-provider";
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,7 +41,15 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
+            <Suspense
+              fallback={
+                <div className="flex h-screen items-center justify-center">
+                  <Loader2 className="animate-spin" />
+                </div>
+              }
+            >
+              <Navbar />
+            </Suspense>
             <main>{children}</main>
             <Toaster />
           </ThemeProvider>
