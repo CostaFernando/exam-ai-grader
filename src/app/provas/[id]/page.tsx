@@ -240,7 +240,8 @@ export default function ExamDetailsPage() {
         }
 
         const encodedInfo = fileRef.substring("idb-file://".length);
-        const fileInfo = JSON.parse(atob(encodedInfo));
+        const percentEncoded = atob(encodedInfo);
+        const fileInfo = JSON.parse(decodeURIComponent(percentEncoded));
         return fileInfo;
       } catch (error) {
         console.error("Error parsing file reference:", error);
