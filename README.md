@@ -74,7 +74,16 @@ pnpm i
 pnpm run dev
 ```
 
-⸻
+---
+## 🧪 Experimentos
+
+Este repositório faz parte de um estudo acadêmico para avaliar a acurácia e confiabilidade de LLMs para correção de provas discursivas multimodais.
+
+Na pasta `experiments/` é possível acessar o código usado para os experimentos e os resultados obtidos.
+
+Em breve, será publicado o nome e link para o estudo acadêmico 🧐.
+
+---
 
 📬 Contato
 
