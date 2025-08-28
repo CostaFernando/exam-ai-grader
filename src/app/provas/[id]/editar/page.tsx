@@ -23,8 +23,9 @@ import { eq } from "drizzle-orm";
 import { examsTable } from "@/db/schema";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { toast } from "sonner";
-import { generateAssessmentRubric } from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
-import { generateAnswerKey } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
+import { readStreamableValue } from "ai/rsc";
+import { generateAssessmentRubricStream } from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
+import { generateAnswerKeyStream } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
 
 type Exam = {
   id: number;
@@ -48,6 +49,8 @@ export default function EditExamPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isGeneratingRubric, setIsGeneratingRubric] = useState(false);
   const [isGeneratingAnswerKey, setIsGeneratingAnswerKey] = useState(false);
+  const [rubricHasFirstChunk, setRubricHasFirstChunk] = useState(false);
+  const [answerHasFirstChunk, setAnswerHasFirstChunk] = useState(false);
 
   useEffect(() => {
     async function initializeDatabaseAndSetDb() {
@@ -118,9 +121,19 @@ export default function EditExamPage() {
     }
 
     setIsGeneratingRubric(true);
+    setRubricHasFirstChunk(false);
     try {
-      const rubric = await generateAssessmentRubric(selectedFile);
-      setExam({ ...exam!, gradingRubric: rubric });
+      // Limpa campo e inicia streaming
+      setExam((prev) => (prev ? { ...prev, gradingRubric: "" } : prev));
+      const { text } = await generateAssessmentRubricStream(selectedFile);
+      let first = true;
+      for await (const chunk of readStreamableValue<string>(text)) {
+        if (first && typeof chunk === "string" && chunk.length > 0) {
+          setRubricHasFirstChunk(true);
+          first = false;
+        }
+        setExam((prev) => (prev ? { ...prev, gradingRubric: chunk || "" } : prev));
+      }
       toast.success("Critérios de avaliação gerados com sucesso!");
     } catch (error) {
       console.error("Error generating rubric:", error);
@@ -137,9 +150,19 @@ export default function EditExamPage() {
     }
 
     setIsGeneratingAnswerKey(true);
+    setAnswerHasFirstChunk(false);
     try {
-      const answerKeyText = await generateAnswerKey(selectedFile);
-      setExam({ ...exam!, answerKey: answerKeyText });
+      // Limpa campo e inicia streaming
+      setExam((prev) => (prev ? { ...prev, answerKey: "" } : prev));
+      const { text } = await generateAnswerKeyStream(selectedFile);
+      let first = true;
+      for await (const chunk of readStreamableValue<string>(text)) {
+        if (first && typeof chunk === "string" && chunk.length > 0) {
+          setAnswerHasFirstChunk(true);
+          first = false;
+        }
+        setExam((prev) => (prev ? { ...prev, answerKey: chunk || "" } : prev));
+      }
       toast.success("Gabarito gerado com sucesso!");
     } catch (error) {
       console.error("Error generating answer key:", error);
@@ -315,15 +338,32 @@ export default function EditExamPage() {
                   )}
                 </Button>
               </div>
-              <Textarea
-                id="rubric"
-                value={exam.gradingRubric || ""}
-                onChange={(e) =>
-                  setExam({ ...exam, gradingRubric: e.target.value })
-                }
-                rows={10}
-                required
-              />
+              <div className="relative">
+                <Textarea
+                  id="rubric"
+                  value={exam.gradingRubric || ""}
+                  onChange={(e) =>
+                    setExam({ ...exam, gradingRubric: e.target.value })
+                  }
+                  rows={10}
+                  required
+                  disabled={isGeneratingRubric}
+                  className={
+                    isGeneratingRubric && !rubricHasFirstChunk
+                      ? "opacity-0"
+                      : undefined
+                  }
+                />
+                {isGeneratingRubric && !rubricHasFirstChunk && (
+                  <div className="absolute inset-0 rounded-md border border-dashed bg-muted/40 dark:bg-muted/20 grid place-items-center animate-pulse">
+                    <div className="flex flex-col items-center text-center px-6">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+                      <span className="text-sm font-medium">Pensando...</span>
+                      <span className="text-xs text-muted-foreground mt-1">Analisando o PDF e preparando os critérios</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -349,15 +389,32 @@ export default function EditExamPage() {
                   )}
                 </Button>
               </div>
-              <Textarea
-                id="answerKey"
-                value={exam.answerKey || ""}
-                onChange={(e) =>
-                  setExam({ ...exam, answerKey: e.target.value })
-                }
-                rows={10}
-                required
-              />
+              <div className="relative">
+                <Textarea
+                  id="answerKey"
+                  value={exam.answerKey || ""}
+                  onChange={(e) =>
+                    setExam({ ...exam, answerKey: e.target.value })
+                  }
+                  rows={10}
+                  required
+                  disabled={isGeneratingAnswerKey}
+                  className={
+                    isGeneratingAnswerKey && !answerHasFirstChunk
+                      ? "opacity-0"
+                      : undefined
+                  }
+                />
+                {isGeneratingAnswerKey && !answerHasFirstChunk && (
+                  <div className="absolute inset-0 rounded-md border border-dashed bg-muted/40 dark:bg-muted/20 grid place-items-center animate-pulse">
+                    <div className="flex flex-col items-center text-center px-6">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+                      <span className="text-sm font-medium">Pensando...</span>
+                      <span className="text-xs text-muted-foreground mt-1">Lendo o PDF e preparando o gabarito</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
           <CardFooter className="pt-6 flex justify-between">
