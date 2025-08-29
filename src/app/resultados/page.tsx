@@ -46,6 +46,9 @@ type ExamAnswer = {
   score: number | null;
   feedback: string | null;
   answerSheetUrl?: string;
+  reviewQuality: number | null;
+  reviewFeedback: string | null;
+  reAssessed: boolean | null;
 };
 
 type GradingStatus = {
@@ -163,11 +166,21 @@ export default function ResultsPage() {
   };
 
   const handleExport = () => {
-    const headers = ["Aluno", "Nota", "Feedback"];
+    const headers = [
+      "Aluno",
+      "Nota",
+      "Feedback",
+      "Review Quality",
+      "Review Feedback",
+      "Reassessed",
+    ];
     const rows = answers.map((answer) => [
       answer.name,
       answer.score ?? "",
       answer.feedback ?? "",
+      answer.reviewQuality ?? "",
+      answer.reviewFeedback ?? "",
+      answer.reAssessed ?? false,
     ]);
     const csvContent = [headers, ...rows]
       .map((row) =>

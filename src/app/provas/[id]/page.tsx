@@ -74,6 +74,9 @@ type ExamAnswer = {
   answerSheetUrl: string | null;
   score: number | null;
   feedback: string | null;
+  reviewQuality: number | null;
+  reviewFeedback: string | null;
+  reAssessed: boolean | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -353,6 +356,9 @@ export default function ExamDetailsPage() {
               .set({
                 score: res.score,
                 feedback: res.feedback,
+                reviewQuality: res.reviewQuality ?? null,
+                reviewFeedback: res.reviewFeedback ?? null,
+                reAssessed: res.reAssessed ?? null,
                 updatedAt: new Date(),
               })
               .where(eq(examAnswersTable.id, res.id));

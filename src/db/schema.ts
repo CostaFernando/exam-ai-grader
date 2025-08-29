@@ -5,6 +5,7 @@ import {
   integer,
   pgEnum,
   numeric,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -39,6 +40,9 @@ export const examAnswersTable = pgTable("exam_answers", {
   answerSheetUrl: text().notNull(),
   score: numeric({ precision: 3, scale: 2, mode: "number" }),
   feedback: text(),
+  reviewQuality: integer(),
+  reviewFeedback: text(),
+  reAssessed: boolean().default(false),
   createdAt: timestamp().defaultNow().notNull(),
   updatedAt: timestamp().defaultNow().notNull(),
 });

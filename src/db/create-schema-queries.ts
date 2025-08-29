@@ -13,6 +13,9 @@ export const createSchemaQueries = [
     "answerSheetUrl" text NOT NULL,
     "score" numeric(3, 2),
     "feedback" text,
+    "reviewQuality" integer,
+    "reviewFeedback" text,
+    "reAssessed" boolean DEFAULT false,
     "createdAt" timestamp DEFAULT now() NOT NULL,
     "updatedAt" timestamp DEFAULT now() NOT NULL
   );`,
@@ -34,8 +37,11 @@ export const createSchemaQueries = [
       IF NOT EXISTS (
           SELECT 1 FROM pg_constraint WHERE conname = 'exam_answers_examId_exams_id_fk'
       ) THEN
-          ALTER TABLE "exam_answers" ADD CONSTRAINT "exam_answers_examId_exams_id_fk" 
+          ALTER TABLE "exam_answers" ADD CONSTRAINT "exam_answers_examId_exams_id_fk"
           FOREIGN KEY ("examId") REFERENCES "public"."exams"("id") ON DELETE cascade ON UPDATE no action;
       END IF;
   END$$;`,
+  `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "reviewQuality" integer;`,
+  `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "reviewFeedback" text;`,
+  `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "reAssessed" boolean DEFAULT false;`,
 ];

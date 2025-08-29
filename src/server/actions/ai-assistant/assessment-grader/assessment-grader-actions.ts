@@ -8,10 +8,15 @@ export async function gradeAnswerSheet(
   assessmentFile: File,
   answerSheet: File,
   gradingRubric: string,
-  answerKey: string
+  answerKey: string,
+  improvementContext?: {
+    previousAssessment: unknown;
+    reviewerFeedback: unknown;
+  }
 ): Promise<{
   score: number;
   feedback: string;
+  assessment: unknown;
 }> {
   const provider: Provider = (process.env.LLM_PROVIDER as Provider) ?? "google";
   const modelName: ModelName =
@@ -35,6 +40,49 @@ Diretrizes a serem seguidas:
   const aiProvider = getAIProvider(provider);
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages: { role: "user"; content: any[] }[] = [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Estas são as questões da prova:" },
+          {
+            type: "file",
+            data: await assessmentFile.arrayBuffer(),
+            mimeType: "application/pdf",
+          },
+          { type: "text", text: `Estes são os critérios de correção:\n${gradingRubric}` },
+          { type: "text", text: `Este é o gabarito:\n${answerKey}` },
+          { type: "text", text: "Esta é a prova do estudante:" },
+          {
+            type: "file",
+            data: await answerSheet.arrayBuffer(),
+            mimeType: "application/pdf",
+          },
+        ],
+      },
+    ];
+
+    if (improvementContext) {
+      messages.push({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `Esta é a avaliação anterior feita por você:\n${JSON.stringify(
+              improvementContext.previousAssessment,
+              null,
+              2
+            )}\n\nEste é o feedback do revisor apontando problemas/ajustes:\n${JSON.stringify(
+              improvementContext.reviewerFeedback,
+              null,
+              2
+            )}\n\nPor favor, refaça a avaliação final melhorada.`,
+          },
+        ],
+      });
+    }
+
     const { object } = await generateObject({
       model: aiProvider(modelName),
       headers: {
@@ -66,39 +114,7 @@ Diretrizes a serem seguidas:
         .strict(),
       system,
       temperature: 1,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Estas são as questões da prova:",
-            },
-            {
-              type: "file",
-              data: await assessmentFile.arrayBuffer(),
-              mimeType: "application/pdf",
-            },
-            {
-              type: "text",
-              text: `Estes são os critérios de correção:\n${gradingRubric}`,
-            },
-            {
-              type: "text",
-              text: `Este é o gabarito:\n${answerKey}`,
-            },
-            {
-              type: "text",
-              text: "Esta é a prova do estudante:",
-            },
-            {
-              type: "file",
-              data: await answerSheet.arrayBuffer(),
-              mimeType: "application/pdf",
-            },
-          ],
-        },
-      ],
+      messages,
     });
 
     const score = object.questoes.reduce(
@@ -114,6 +130,7 @@ Diretrizes a serem seguidas:
     return {
       score,
       feedback,
+      assessment: object,
     };
   } catch (error) {
     console.error("Error grading answer sheet:", error);
@@ -121,10 +138,101 @@ Diretrizes a serem seguidas:
   }
 }
 
+export async function reviewAnswerSheet(
+  assessmentFile: File,
+  answerSheet: File,
+  gradingRubric: string,
+  answerKey: string,
+  graderOutput: unknown
+): Promise<{ qualityScore: number; overallFeedback: string }> {
+  const provider: Provider =
+    (process.env.REVIEWER_PROVIDER as Provider) ||
+    ((process.env.LLM_PROVIDER as Provider) ?? "google");
+  const modelName: ModelName =
+    process.env.REVIEWER_MODEL ||
+    (process.env.LLM_MODEL ?? "gemini-2.5-flash-preview-04-17");
+
+  const system = `Você é um revisor crítico de avaliações. Seu papel:
+- Ver a prova, o gabarito, as respostas do aluno e a avaliação feita pelo avaliador.
+- Verificar se o feedback para o aluno é claro, alinhado com a rubrica/gabarito.
+- Verificar se as notas dadas fazem sentido.
+- Sugerir melhorias específicas se algo estiver errado, faltando ou puder ser mais claro.
+- Retornar uma nota de qualidade (1-5) para a avaliação, onde 5 é excelente.
+- Se o estudante cometeu algum erro na questão e o avaliador não identificou, deixe claro que a questão precisa ser corrigida novamente.
+- Se houver qualquer uma das questões que precisem de correção novamente, dê uma nota abaixo de 4 para o avaliador.
+- Não é para você criticar o gabarito, trate o gabarito como a fonte da verdade.
+Responda no schema especificado.`;
+
+  const aiProvider = getAIProvider(provider);
+
+  const { object } = await generateObject({
+    model: aiProvider(modelName),
+    headers: {
+      "Helicone-Property-Feature": "review-answer-sheet",
+      "Helicone-Property-Source": "assessment-ai-grader",
+    },
+    schema: z
+      .object({
+        quality_score: z
+          .number()
+          .describe(
+            "Nota de 1 a 5 para a qualidade da avaliação do avaliador."
+          ),
+        overall_feedback: z
+          .string()
+          .describe(
+            "Feedback geral sobre a avaliação do avaliador, o que melhorar, o que está bom."
+          ),
+      })
+      .strict(),
+    system,
+    temperature: 1,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Estas são as questões da prova:" },
+          {
+            type: "file",
+            data: await assessmentFile.arrayBuffer(),
+            mimeType: "application/pdf",
+          },
+          {
+            type: "text",
+            text: `Estes são os critérios de correção:\n${gradingRubric}`,
+          },
+          { type: "text", text: `Este é o gabarito:\n${answerKey}` },
+          { type: "text", text: "Esta é a prova do estudante:" },
+          {
+            type: "file",
+            data: await answerSheet.arrayBuffer(),
+            mimeType: "application/pdf",
+          },
+          {
+            type: "text",
+            text: `Avaliação do avaliador (feedbacks e notas por questão):\n${JSON.stringify(
+              graderOutput,
+              null,
+              2
+            )}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  return {
+    qualityScore: object.quality_score,
+    overallFeedback: object.overall_feedback,
+  };
+}
 export type GradeResult = {
   id: number;
   score?: number;
   feedback?: string;
+  reviewQuality?: number;
+  reviewFeedback?: string;
+  reAssessed?: boolean;
   error?: string;
 };
 
@@ -134,16 +242,61 @@ export async function gradeMultipleAnswerSheets(
   gradingRubric: string,
   answerKey: string
 ): Promise<GradeResult[]> {
+  const reviewEnabled = process.env.REVIEWER_ENABLED === "true";
+  const qualityThreshold = Number(
+    process.env.REVIEWER_QUALITY_THRESHOLD ?? 4
+  );
+
   const results = await Promise.all(
     answers.map(async ({ id, file }) => {
       try {
-        const { score, feedback } = await gradeAnswerSheet(
+        const first = await gradeAnswerSheet(
           examFile,
           file,
           gradingRubric,
           answerKey
         );
-        return { id, score, feedback };
+
+        let finalAssessment = first;
+        let reviewQuality: number | undefined;
+        let reviewFeedback: string | undefined;
+        let reAssessed = false;
+
+        if (reviewEnabled) {
+          const review = await reviewAnswerSheet(
+            examFile,
+            file,
+            gradingRubric,
+            answerKey,
+            first.assessment
+          );
+
+          reviewQuality = review.qualityScore;
+          reviewFeedback = review.overallFeedback;
+
+          if (review.qualityScore < qualityThreshold) {
+            finalAssessment = await gradeAnswerSheet(
+              examFile,
+              file,
+              gradingRubric,
+              answerKey,
+              {
+                previousAssessment: first.assessment,
+                reviewerFeedback: review,
+              }
+            );
+            reAssessed = true;
+          }
+        }
+
+        return {
+          id,
+          score: finalAssessment.score,
+          feedback: finalAssessment.feedback,
+          reviewQuality,
+          reviewFeedback,
+          reAssessed,
+        };
       } catch (err: unknown) {
         let errorMessage = "Grading failed";
         if (err instanceof Error) {
