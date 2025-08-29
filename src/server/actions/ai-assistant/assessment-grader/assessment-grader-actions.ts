@@ -50,9 +50,20 @@ async function runGrader(params: {
   answerKey: string;
   provider: Provider;
   modelName: ModelName;
-  improvementContext?: { previousAssessment: GraderOutput; reviewerFeedback: ReviewOutput };
+  improvementContext?: {
+    previousAssessment: GraderOutput;
+    reviewerFeedback: ReviewOutput;
+  };
 }): Promise<GraderOutput> {
-  const { assessmentFile, answerSheet, gradingRubric, answerKey, provider, modelName, improvementContext } = params;
+  const {
+    assessmentFile,
+    answerSheet,
+    gradingRubric,
+    answerKey,
+    provider,
+    modelName,
+    improvementContext,
+  } = params;
   const aiProvider = getAIProvider(provider);
 
   const messages: CoreMessage[] = [
@@ -60,11 +71,22 @@ async function runGrader(params: {
       role: "user",
       content: [
         { type: "text", text: "Estas são as questões da prova:" },
-        { type: "file", data: await assessmentFile.arrayBuffer(), mimeType: "application/pdf" },
-        { type: "text", text: `Estes são os critérios de correção:\n${gradingRubric}` },
+        {
+          type: "file",
+          data: await assessmentFile.arrayBuffer(),
+          mimeType: "application/pdf",
+        },
+        {
+          type: "text",
+          text: `Estes são os critérios de correção:\n${gradingRubric}`,
+        },
         { type: "text", text: `Este é o gabarito:\n${answerKey}` },
         { type: "text", text: "Esta é a prova do estudante:" },
-        { type: "file", data: await answerSheet.arrayBuffer(), mimeType: "application/pdf" },
+        {
+          type: "file",
+          data: await answerSheet.arrayBuffer(),
+          mimeType: "application/pdf",
+        },
       ],
     },
   ];
@@ -76,9 +98,9 @@ async function runGrader(params: {
         {
           type: "text",
           text: `Esta é a avaliação anterior feita por você:\n${JSON.stringify(
-            improvementContext.previousAssessment,
+            improvementContext.previousAssessment
           )}\n\nEste é o feedback do revisor apontando problemas/ajustes:\n${JSON.stringify(
-            improvementContext.reviewerFeedback,
+            improvementContext.reviewerFeedback
           )}\n\nPor favor, refaça a avaliação final melhorada.`,
         },
       ],
@@ -96,17 +118,21 @@ async function runGrader(params: {
         questoes: z.array(
           z
             .object({
-              questaoNumero: z.number().describe("Número identificador da questão."),
+              questaoNumero: z
+                .number()
+                .describe("Número identificador da questão."),
               feedback: z
                 .string()
                 .describe(
-                  "Feedback detalhado para o estudante, deixando claro a pontuação que o estudante tirou em cada critério e alternativa da questão. Explicando os erros e como melhorar.",
+                  "Feedback detalhado para o estudante, deixando claro a pontuação que o estudante tirou em cada critério e alternativa da questão. Explicando os erros e como melhorar."
                 ),
               nota: z
                 .number()
-                .describe("Nota final da questão (soma das notas por critério), com duas casas decimais."),
+                .describe(
+                  "Nota final da questão (soma das notas por critério), com duas casas decimais."
+                ),
             })
-            .strict(),
+            .strict()
         ),
       })
       .strict(),
@@ -127,7 +153,15 @@ async function runReviewer(params: {
   provider: Provider;
   modelName: ModelName;
 }): Promise<ReviewOutput> {
-  const { assessmentFile, answerSheet, gradingRubric, answerKey, graderOutput, provider, modelName } = params;
+  const {
+    assessmentFile,
+    answerSheet,
+    gradingRubric,
+    answerKey,
+    graderOutput,
+    provider,
+    modelName,
+  } = params;
   const aiProvider = getAIProvider(provider);
 
   const { object } = await generateObject({
@@ -140,11 +174,13 @@ async function runReviewer(params: {
       .object({
         quality_score: z
           .number()
-          .describe("Nota de 1 a 5 para a qualidade da avaliação do avaliador."),
+          .describe(
+            "Nota de 1 a 5 para a qualidade da avaliação do avaliador."
+          ),
         overall_feedback: z
           .string()
           .describe(
-            "Feedback geral sobre a avaliação do avaliador, o que melhorar, o que está bom.",
+            "Feedback geral sobre a avaliação do avaliador, o que melhorar, o que está bom."
           ),
       })
       .strict(),
@@ -155,14 +191,27 @@ async function runReviewer(params: {
         role: "user",
         content: [
           { type: "text", text: "Estas são as questões da prova:" },
-          { type: "file", data: await assessmentFile.arrayBuffer(), mimeType: "application/pdf" },
-          { type: "text", text: `Estes são os critérios de correção:\n${gradingRubric}` },
-          { type: "text", text: `Este é o gabarito:\n${answerKey}` },
-          { type: "text", text: "Esta é a prova do estudante:" },
-          { type: "file", data: await answerSheet.arrayBuffer(), mimeType: "application/pdf" },
+          {
+            type: "file",
+            data: await assessmentFile.arrayBuffer(),
+            mimeType: "application/pdf",
+          },
           {
             type: "text",
-            text: `Avaliação do avaliador (feedbacks e notas por questão):\n${JSON.stringify(graderOutput)}`,
+            text: `Estes são os critérios de correção:\n${gradingRubric}`,
+          },
+          { type: "text", text: `Este é o gabarito:\n${answerKey}` },
+          { type: "text", text: "Esta é a prova do estudante:" },
+          {
+            type: "file",
+            data: await answerSheet.arrayBuffer(),
+            mimeType: "application/pdf",
+          },
+          {
+            type: "text",
+            text: `Avaliação do avaliador (feedbacks e notas por questão):\n${JSON.stringify(
+              graderOutput
+            )}`,
           },
         ],
       },
@@ -176,7 +225,7 @@ export async function gradeAnswerSheet(
   assessmentFile: File,
   answerSheet: File,
   gradingRubric: string,
-  answerKey: string,
+  answerKey: string
 ): Promise<{
   score: number;
   feedback: string;
@@ -185,14 +234,19 @@ export async function gradeAnswerSheet(
   regraded: boolean;
 }> {
   const provider: Provider = (process.env.LLM_PROVIDER as Provider) ?? "google";
-  const modelName: ModelName = process.env.LLM_MODEL ?? "gemini-2.5-flash-preview-04-17";
+  const modelName: ModelName =
+    process.env.LLM_MODEL ?? "gemini-2.5-flash-preview-04-17";
 
   const reviewEnabled = process.env.REVIEWER_AGENT_ENABLED === "true";
   const reviewThreshold = Number(process.env.REVIEWER_QUALITY_THRESHOLD ?? "4");
   const reviewerProvider: Provider =
-    (process.env.REVIEWER_LLM_PROVIDER as Provider) ?? (process.env.LLM_PROVIDER as Provider) ?? "google";
+    (process.env.REVIEWER_LLM_PROVIDER as Provider) ??
+    (process.env.LLM_PROVIDER as Provider) ??
+    "google";
   const reviewerModel: ModelName =
-    process.env.REVIEWER_LLM_MODEL ?? process.env.LLM_MODEL ?? "gemini-2.5-flash-preview-04-17";
+    process.env.REVIEWER_LLM_MODEL ??
+    process.env.LLM_MODEL ??
+    "gemini-2.5-flash-preview-04-17";
 
   const firstAssessment = await runGrader({
     assessmentFile,
@@ -239,8 +293,13 @@ export async function gradeAnswerSheet(
     }
   }
 
-  const score = finalAssessment.questoes.reduce((acc, questao) => acc + Number(questao.nota), 0);
-  const feedback = finalAssessment.questoes.map((questao) => questao.feedback).join("\n\n");
+  const score = finalAssessment.questoes.reduce(
+    (acc, questao) => acc + Number(questao.nota),
+    0
+  );
+  const feedback = finalAssessment.questoes
+    .map((questao) => questao.feedback)
+    .join("\n\n");
 
   return { score, feedback, reviewQuality, reviewFeedback, regraded };
 }
@@ -259,17 +318,14 @@ export async function gradeMultipleAnswerSheets(
   examFile: File,
   answers: { id: number; file: File }[],
   gradingRubric: string,
-  answerKey: string,
+  answerKey: string
 ): Promise<GradeResult[]> {
   const results = await Promise.all(
     answers.map(async ({ id, file }) => {
       try {
-        const { score, feedback, reviewQuality, reviewFeedback, regraded } = await gradeAnswerSheet(
-          examFile,
-          file,
-          gradingRubric,
-          answerKey,
-        );
+        const { score, feedback, reviewQuality, reviewFeedback, regraded } =
+          await gradeAnswerSheet(examFile, file, gradingRubric, answerKey);
+
         return { id, score, feedback, reviewQuality, reviewFeedback, regraded };
       } catch (err: unknown) {
         let errorMessage = "Grading failed";
@@ -280,7 +336,7 @@ export async function gradeMultipleAnswerSheets(
         }
         return { id, error: errorMessage };
       }
-    }),
+    })
   );
   return results;
 }

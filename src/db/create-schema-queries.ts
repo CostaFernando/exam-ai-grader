@@ -11,7 +11,7 @@ export const createSchemaQueries = [
     "name" text NOT NULL,
     "examId" integer NOT NULL,
     "answerSheetUrl" text NOT NULL,
-    "score" numeric(3, 2),
+    "score" numeric(4, 2),
     "feedback" text,
     "reviewQuality" integer,
     "reviewFeedback" text,
@@ -44,4 +44,17 @@ export const createSchemaQueries = [
   `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "reviewQuality" integer;`,
   `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "reviewFeedback" text;`,
   `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "regraded" boolean DEFAULT false;`,
+  `DO $$
+  BEGIN
+      IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'exam_answers'
+            AND column_name = 'score'
+            AND data_type = 'numeric'
+            AND (numeric_precision IS NULL OR numeric_precision < 4 OR numeric_scale IS NULL OR numeric_scale < 2)
+      ) THEN
+          ALTER TABLE "exam_answers" ALTER COLUMN "score" TYPE numeric(4, 2);
+      END IF;
+  END$$;`,
 ];

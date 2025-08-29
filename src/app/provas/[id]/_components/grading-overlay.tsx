@@ -11,7 +11,7 @@ export function GradingOverlay() {
   const [showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
-    const totalTime = 120;
+    const totalTime = 180;
     const interval = setInterval(() => {
       setTimeElapsed((prev) => {
         const newTime = prev + 1;
@@ -39,7 +39,7 @@ export function GradingOverlay() {
   }, []);
 
   const formatTimeRemaining = () => {
-    const remaining = Math.max(0, 120 - timeElapsed);
+    const remaining = Math.max(0, 180 - timeElapsed);
     const minutes = Math.floor(remaining / 60);
     const seconds = remaining % 60;
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
@@ -114,7 +114,7 @@ export function GradingOverlay() {
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-left">
-                  A correção pode levar até 2 minutos. Por favor, não feche esta
+                  A correção pode levar até 3 minutos. Por favor, não feche esta
                   janela ou navegue para outra página durante o processo.
                 </p>
               </div>

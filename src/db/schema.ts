@@ -38,7 +38,7 @@ export const examAnswersTable = pgTable("exam_answers", {
     .notNull()
     .references(() => examsTable.id, { onDelete: "cascade" }),
   answerSheetUrl: text().notNull(),
-  score: numeric({ precision: 3, scale: 2, mode: "number" }),
+  score: numeric({ precision: 4, scale: 2, mode: "number" }),
   feedback: text(),
   reviewQuality: integer(),
   reviewFeedback: text(),
