@@ -33,6 +33,9 @@ type ExamAnswer = {
   examId: number;
   score: number | null;
   feedback: string | null;
+  reviewQuality: number | null;
+  reviewFeedback: string | null;
+  regraded: boolean | null;
   answerSheetUrl: string | null;
   createdAt: Date | null;
   updatedAt: Date | null;

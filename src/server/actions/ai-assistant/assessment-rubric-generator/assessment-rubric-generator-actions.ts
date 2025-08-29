@@ -16,6 +16,7 @@ Tenha alguns pontos em mente:
 - Você deve especificar quantos pontos vale a questão como um todo.
 - Se a questão for dividida em alternativas, explicite quantos pontos vale cada alternativa, para compor a pontuação total da questão. Explicite também as rubricas de avaliação para cada alternativa.
 - Diga quantos pontos vale cada rubrica de avaliação para compor a nota total da questão ou da alternativa.
+- Não use markdown, HTML ou qualquer formatação especial. Apenas texto simples. Mas deixe bem estruturado e fácil de ler.
 
 Escreva diretamente, sem preâmbulos, as rubricas de avaliação para cada questão.`;
 

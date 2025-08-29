@@ -10,7 +10,8 @@ export async function generateAnswerKey(assessmentFile: File): Promise<string> {
 
   const system = `Você é um professor especialista em avaliações. Você receberá um arquivo com as questões de uma prova e, baseado nisso, escreverá o gabarito com solução para cada questão.
   
-  Escreva diretamente, sem preâmbulos, o gabarito com a solução para cada questão.`;
+- Não use markdown, HTML ou qualquer formatação especial. Apenas texto simples. Mas deixe bem estruturado e fácil de ler.
+- Escreva diretamente, sem preâmbulos, o gabarito com a solução para cada questão.`;
 
   const aiProvider = getAIProvider(provider);
 
