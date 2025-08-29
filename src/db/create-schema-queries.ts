@@ -13,6 +13,9 @@ export const createSchemaQueries = [
     "answerSheetUrl" text NOT NULL,
     "score" numeric(3, 2),
     "feedback" text,
+    "reviewQuality" integer,
+    "reviewFeedback" text,
+    "regraded" boolean DEFAULT false,
     "createdAt" timestamp DEFAULT now() NOT NULL,
     "updatedAt" timestamp DEFAULT now() NOT NULL
   );`,
@@ -38,4 +41,7 @@ export const createSchemaQueries = [
           FOREIGN KEY ("examId") REFERENCES "public"."exams"("id") ON DELETE cascade ON UPDATE no action;
       END IF;
   END$$;`,
+  `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "reviewQuality" integer;`,
+  `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "reviewFeedback" text;`,
+  `ALTER TABLE "exam_answers" ADD COLUMN IF NOT EXISTS "regraded" boolean DEFAULT false;`,
 ];

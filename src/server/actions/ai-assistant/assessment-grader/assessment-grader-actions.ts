@@ -1,5 +1,5 @@
 "use server";
-import { generateObject } from "ai";
+import { generateObject, type CoreMessage } from "ai";
 import { z } from "zod";
 import { getAIProvider } from "@/lib/ai-sdk";
 import type { Provider, ModelName } from "@/lib/ai-sdk";
@@ -55,7 +55,7 @@ async function runGrader(params: {
   const { assessmentFile, answerSheet, gradingRubric, answerKey, provider, modelName, improvementContext } = params;
   const aiProvider = getAIProvider(provider);
 
-  const messages: { role: "user"; content: unknown[] }[] = [
+  const messages: CoreMessage[] = [
     {
       role: "user",
       content: [
