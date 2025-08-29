@@ -45,6 +45,9 @@ type ExamAnswer = {
   name: string;
   score: number | null;
   feedback: string | null;
+  reviewQuality: number | null;
+  reviewFeedback: string | null;
+  regraded: boolean | null;
   answerSheetUrl?: string;
 };
 
@@ -163,11 +166,21 @@ export default function ResultsPage() {
   };
 
   const handleExport = () => {
-    const headers = ["Aluno", "Nota", "Feedback"];
+    const headers = [
+      "Aluno",
+      "Nota",
+      "Feedback",
+      "Qualidade da Revisão",
+      "Feedback do Revisor",
+      "Reavaliado",
+    ];
     const rows = answers.map((answer) => [
       answer.name,
       answer.score ?? "",
       answer.feedback ?? "",
+      answer.reviewQuality ?? "",
+      answer.reviewFeedback ?? "",
+      answer.regraded ? "Sim" : "Não",
     ]);
     const csvContent = [headers, ...rows]
       .map((row) =>
