@@ -30,8 +30,9 @@ import { Loader2, Sparkles } from "lucide-react";
 import { storeFileInIndexedDB } from "@/lib/indexedDB";
 import { initializeDatabase, type DbInstance } from "@/db";
 import { examsTable } from "@/db/schema";
-import { generateAssessmentRubric } from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
-import { generateAnswerKey } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
+import { readStreamableValue } from "ai/rsc";
+import { generateAssessmentRubricStream } from "@/server/actions/ai-assistant/assessment-rubric-generator/assessment-rubric-generator-actions";
+import { generateAnswerKeyStream } from "@/server/actions/ai-assistant/answer-key-generator/answer-key-generator-actions";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome da prova é obrigatório"),
@@ -47,6 +48,8 @@ export default function CreateExamPage() {
   const [isPending, setIsPending] = useState(false);
   const [isGeneratingRubric, setIsGeneratingRubric] = useState(false);
   const [isGeneratingAnswerKey, setIsGeneratingAnswerKey] = useState(false);
+  const [rubricHasFirstChunk, setRubricHasFirstChunk] = useState(false);
+  const [answerHasFirstChunk, setAnswerHasFirstChunk] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -95,9 +98,19 @@ export default function CreateExamPage() {
     }
 
     setIsGeneratingRubric(true);
+    setRubricHasFirstChunk(false);
     try {
-      const rubric = await generateAssessmentRubric(selectedFile);
-      form.setValue("gradingRubric", rubric);
+      // Limpa campo e inicia streaming
+      form.setValue("gradingRubric", "");
+      const { text } = await generateAssessmentRubricStream(selectedFile);
+      let first = true;
+      for await (const chunk of readStreamableValue<string>(text)) {
+        if (first && typeof chunk === "string" && chunk.length > 0) {
+          setRubricHasFirstChunk(true);
+          first = false;
+        }
+        form.setValue("gradingRubric", chunk || "");
+      }
       toast.success("Critérios de correção gerados com sucesso!");
     } catch (error) {
       console.error("Error generating rubric:", error);
@@ -114,9 +127,19 @@ export default function CreateExamPage() {
     }
 
     setIsGeneratingAnswerKey(true);
+    setAnswerHasFirstChunk(false);
     try {
-      const answerKeyText = await generateAnswerKey(selectedFile);
-      form.setValue("answerKey", answerKeyText);
+      // Limpa campo e inicia streaming
+      form.setValue("answerKey", "");
+      const { text } = await generateAnswerKeyStream(selectedFile);
+      let first = true;
+      for await (const chunk of readStreamableValue<string>(text)) {
+        if (first && typeof chunk === "string" && chunk.length > 0) {
+          setAnswerHasFirstChunk(true);
+          first = false;
+        }
+        form.setValue("answerKey", chunk || "");
+      }
       toast.success("Gabarito gerado com sucesso!");
     } catch (error) {
       console.error("Error generating answer key:", error);
@@ -266,13 +289,30 @@ export default function CreateExamPage() {
                       </Button>
                     </div>
                     <FormControl>
-                      <Textarea
-                        placeholder="Insira seus critérios de correção aqui. Por exemplo:
+                      <div className="relative">
+                        <Textarea
+                          placeholder="Insira seus critérios de correção aqui. Por exemplo:
 - Questão 1 (10 pontos): Explicação completa do conceito X
 - Questão 2 (15 pontos): Aplicação correta da fórmula Y"
-                        rows={6}
-                        {...field}
-                      />
+                          rows={6}
+                          disabled={isGeneratingRubric}
+                          className={
+                            isGeneratingRubric && !rubricHasFirstChunk
+                              ? "opacity-0"
+                              : undefined
+                          }
+                          {...field}
+                        />
+                        {isGeneratingRubric && !rubricHasFirstChunk && (
+                          <div className="absolute inset-0 rounded-md border border-dashed bg-muted/40 dark:bg-muted/20 grid place-items-center animate-pulse">
+                            <div className="flex flex-col items-center text-center px-6">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+                              <span className="text-sm font-medium">Pensando...</span>
+                              <span className="text-xs text-muted-foreground mt-1">Analisando o PDF e preparando os critérios</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -307,11 +347,28 @@ export default function CreateExamPage() {
                       </Button>
                     </div>
                     <FormControl>
-                      <Textarea
-                        placeholder="Insira as respostas corretas para cada questão aqui."
-                        rows={6}
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Textarea
+                          placeholder="Insira as respostas corretas para cada questão aqui."
+                          rows={6}
+                          disabled={isGeneratingAnswerKey}
+                          className={
+                            isGeneratingAnswerKey && !answerHasFirstChunk
+                              ? "opacity-0"
+                              : undefined
+                          }
+                          {...field}
+                        />
+                        {isGeneratingAnswerKey && !answerHasFirstChunk && (
+                          <div className="absolute inset-0 rounded-md border border-dashed bg-muted/40 dark:bg-muted/20 grid place-items-center animate-pulse">
+                            <div className="flex flex-col items-center text-center px-6">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+                              <span className="text-sm font-medium">Pensando...</span>
+                              <span className="text-xs text-muted-foreground mt-1">Lendo o PDF e preparando o gabarito</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
